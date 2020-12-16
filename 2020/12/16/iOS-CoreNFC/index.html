@@ -20,28 +20,43 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="lhs7248的博客">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="一、简介本文是关于iOS13 NFC技术的相关学习及探索 二、iOS13关于NFC能力介绍 在iOS13上Apple 扩展了关于NFC相关的技术能力  关于iOS不同版本对NFC支持信息    在iOS 13系统上NFC的技术支持更加的强大  iOS13系统基本支持目前已经部署的NFC协议的读写操作 开发者可以通过iOS Core NFC Framework提供的native protocols与">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS-CoreNFC">
+<meta property="og:url" content="http://example.com/2020/12/16/iOS-CoreNFC/index.html">
 <meta property="og:site_name" content="lhs7248的博客">
+<meta property="og:description" content="一、简介本文是关于iOS13 NFC技术的相关学习及探索 二、iOS13关于NFC能力介绍 在iOS13上Apple 扩展了关于NFC相关的技术能力  关于iOS不同版本对NFC支持信息    在iOS 13系统上NFC的技术支持更加的强大  iOS13系统基本支持目前已经部署的NFC协议的读写操作 开发者可以通过iOS Core NFC Framework提供的native protocols与">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/iOS13-NFC-Ability.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/iOS13-NFC-Tag.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/smartPhoneSupport.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/progressNFC.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/projectStep1.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/projectStep2.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/NFCSupportSession.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/NFCTagReaderSession.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/otherNFCTags.png">
+<meta property="og:image" content="http://example.com/2020/12/16/iOS-CoreNFC/RPReplay_Final1590976131.gif">
+<meta property="article:published_time" content="2020-12-16T09:50:59.000Z">
+<meta property="article:modified_time" content="2020-12-16T10:16:30.810Z">
 <meta property="article:author" content="lhs728">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/16/iOS-CoreNFC/iOS13-NFC-Ability.png">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2020/12/16/iOS-CoreNFC/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'en'
   };
 </script>
 
-  <title>lhs7248的博客</title>
+  <title>iOS-CoreNFC | lhs7248的博客</title>
   
 
 
@@ -157,9 +172,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
@@ -175,10 +191,9 @@
       <meta itemprop="name" content="lhs7248的博客">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/16/iOS-CoreNFC/" class="post-title-link" itemprop="url">iOS-CoreNFC</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          iOS-CoreNFC
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -216,7 +231,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h4><p>本文是关于iOS13 NFC技术的相关学习及探索</p>
+        <h4 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h4><p>本文是关于iOS13 NFC技术的相关学习及探索</p>
 <h4 id="二、iOS13关于NFC能力介绍"><a href="#二、iOS13关于NFC能力介绍" class="headerlink" title="二、iOS13关于NFC能力介绍"></a>二、iOS13关于NFC能力介绍</h4><ul>
 <li><p>在iOS13上Apple 扩展了关于NFC相关的技术能力<br><img src="/2020/12/16/iOS-CoreNFC/iOS13-NFC-Ability.png" alt="alt"></p>
 </li>
@@ -231,131 +246,158 @@
 </ol>
 </li>
 <li><p>主要的（iOS &amp; Android）智能手机平台都以提供了对NFC大范围的支持，不用担心平台之间的限制<br><img src="/2020/12/16/iOS-CoreNFC/smartPhoneSupport.png" alt="alt"></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/12/16/iOS-CoreNFC/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
+<a id="more"></a>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/11/cocoapods-rubyMine/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="lhs728">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="lhs7248的博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/11/cocoapods-rubyMine/" class="post-title-link" itemprop="url">关于如何使用rubyMine调试cocoapods插件</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2020-12-11 15:14:45 / Modified: 17:27:16" itemprop="dateCreated datePublished" datetime="2020-12-11T15:14:45+08:00">2020-12-11</time>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="Symbols count in article">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>2.6k</span>
-            </span>
-            <span class="post-meta-item" title="Reading time">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>2 mins.</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h5 id="一、环境信息"><a href="#一、环境信息" class="headerlink" title="一、环境信息"></a>一、环境信息</h5><ol>
-<li><p>系统 ruby版本： </p>
-<pre><code> ruby --version
- ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin19]</code></pre>
 </li>
-<li><p>Mac的系统版本</p>
-<pre><code> macOS Catalina  10.15.5</code></pre>
+</ul>
+<h4 id="三、iOS13上NFC技术的使用场景"><a href="#三、iOS13上NFC技术的使用场景" class="headerlink" title="三、iOS13上NFC技术的使用场景"></a>三、iOS13上NFC技术的使用场景</h4><ul>
+<li>智能家居相关的设备：门禁、室内温度调节器等</li>
+<li>工业生产中相关的设备：信号控制器、机械控制</li>
+<li>健康和医疗保健：健康追踪、和智能手表的交互</li>
+<li>在ESL和照明系统：信号灯、Led 控制</li>
+</ul>
+<h4 id="四、iOS-13-使用NFC的步骤"><a href="#四、iOS-13-使用NFC的步骤" class="headerlink" title="四、iOS 13 使用NFC的步骤"></a>四、iOS 13 使用NFC的步骤</h4><ul>
+<li>开始一个支持NFC功能的项目步骤如下:<br><img src="/2020/12/16/iOS-CoreNFC/progressNFC.png" alt="alt"></li>
+</ul>
+<ul>
+<li>配置工程支持添加对NFC功能的支持</li>
+</ul>
+<p><img src="/2020/12/16/iOS-CoreNFC/projectStep1.png" alt="alt"><br><img src="/2020/12/16/iOS-CoreNFC/projectStep2.png" alt="alt"></p>
+<ul>
+<li>开启NFC Reader Session 通常是用来扫描和发现NFC的标签，目前iOS13支持如下的两种方式：<br>  <img src="/2020/12/16/iOS-CoreNFC/NFCSupportSession.png" alt="alt"></li>
+</ul>
+<ul>
+<li><p>关于NFCNDEFReaderSession的读取与写入，Apple提供了很详细的例子：<a target="_blank" rel="noopener" href="https://docs-assets.developer.apple.com/published/3111a8e27d/BuildingAnNFCTagReaderApp.zip">BuildingAnNFCTagReaderApp</a></p>
 </li>
-<li><p>安装 rvm工具</p>
-<pre><code> 1. curl -sSL https://get.rvm.io | bash -s stable
- 2. rvm 安装完毕信息如下：
-     Ruby enVironment Manager 1.29.10 (latest) (c) 2009-2017 Michal Papis, Piotr Kuczynski, Wayne E. Seguin
-     For additional documentation please visit https://rvm.io</code></pre>
+<li><p>在iOS13中新引入了NFCTagReaderSession API，该API允许你的应用在对应的技术下扫描并连接:</p>
+<p>  <img src="/2020/12/16/iOS-CoreNFC/NFCTagReaderSession.png" alt="alt"></p>
 </li>
-<li><p>通过 rvm 安装ruby</p>
-<pre><code> rvm install &quot;ruby-2.7.2&quot;</code></pre>
+<li><p>如果你需要支持ISO7816, ISO15693, FeliCa, and MIFARE tags，则需要在info.plist 上添加支持对应的AID，例如使用ISO7816:<br>  <img src="/2020/12/16/iOS-CoreNFC/otherNFCTags.png" alt="alt"></p>
 </li>
-<li><p>设置ruby 2.7.2 版本的ruby 为默认的ruby</p>
-<pre><code> rvm 2.7.2 -- current &amp;&amp; default</code></pre>
+</ul>
+<h4 id="五、上海公交卡-ISO7816"><a href="#五、上海公交卡-ISO7816" class="headerlink" title="五、上海公交卡(ISO7816)"></a>五、上海公交卡(ISO7816)</h4><blockquote>
+<p>由于ApplePay支持上海公交卡刷卡，刚好手里有上海公交卡，所以就基于上海公交卡完成了如下的探索</p>
+</blockquote>
+<ol>
+<li><p>开启NFC扫描，</p>
+<blockquote>
+<p>上海公交tag 属于ISO7816tag，AID：A00000000386980701</p>
+</blockquote>
+<pre><code> public func startReaderSession() &#123;
+
+     self.session = NFCTagReaderSession(pollingOption:[.iso14443], delegate: self)
+     self.session?.begin()
+     self.session?.alertMessage = &quot;Hold your iPhone near the item to learn more about it&quot;
+ &#125;</code></pre>
 </li>
-<li><p>安装ruby的调试工具RubyMine-2020.3（30天试用期）</p>
+<li><p>发送获取数据的指令</p>
+<blockquote>
+<p>在扫描结果回调的delegate中发起连接并发送请求数据对应的指令</p>
+</blockquote>
+<pre><code> public func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) &#123;
+     if tags.count &gt; 1 &#123;
+         self.delegate?.ISO7816Reader(self, withError: LSISO7816TagError.countExceed)
+         return
+     &#125;
+     let tag = tags.first!
+
+     session.connect(to: tag) &#123; (error) in
+
+         guard tag.isAvailable else&#123;
+                    print(&quot;tag.UnAvailable&quot;)
+                    return;
+                &#125;
+         print(&quot;this is start connect\(String(describing: error))&quot;)
+         guard error == nil else &#123;
+             session.invalidate(errorMessage: &quot;Failed to connect&quot;)
+             self.delegate?.ISO7816Reader(self, withError: LSISO7816TagError.cannotConnect)
+             return
+         &#125;
+
+         guard case .iso7816(let ios7816Tag) = tag else &#123;
+             self.delegate?.ISO7816Reader(self, withError: LSISO7816TagError.typeMismatch)
+             return
+         &#125;
+         print(ios7816Tag.type)
+         print(ios7816Tag.isAvailable)
+         print(ios7816Tag.initialSelectedAID)
+
+         self.readBinary(tag: ios7816Tag, data: Data()) &#123; (res, sw1, sw2, error) in
+
+             guard error == nil &amp;&amp; (sw1 == 0x90 &amp;&amp; sw2 == 0) else &#123;
+                 let msg = self.decodeError(sw1: sw1, sw2: sw2)
+                 session.invalidate(errorMessage: msg)
+                 return
+             &#125;
+             let publishCardInfo =  LSPublishCarInfo(res)
+             self.carInfo?.cardPublistInfo = publishCardInfo
+
+         &#125;
+
+     self.selectBalance(tag: ios7816Tag, data: Data()) &#123; (respondeData, sw1, sw2, error) in
+
+             guard error == nil &amp;&amp; (sw1 == 0x90 &amp;&amp; sw2 == 0) else &#123;
+                 let msg = self.decodeError(sw1: sw1, sw2: sw2)
+                 session.invalidate(errorMessage: msg)
+                 return
+             &#125;
+
+             self.carInfo?.balance = String((respondeData.toIntReversed(0, 3)/100))
+
+             print(&quot;读取卡的金额：\(respondeData.toIntReversed(0, 3)/100)&quot;)
+
+         &#125;
+     &#125;
+ &#125;</code></pre>
+</li>
+<li><p>指令及数据解析：</p>
+<blockquote>
+<p>NFC读取公交卡信息的技术主要困难点在于指令点发送及数据的解析,sw1 == 0x90 &amp;&amp; sw2 == 0 表示发送的指令正确</p>
+</blockquote>
+<pre><code> internal func selectBalance(tag:LSNFCReaderTag, data:Data, completionHandler: @escaping LSNFCReaderCompletionHandler)
+ &#123;
+     let apdu = NFCISO7816APDU(instructionClass: 0x80, instructionCode: 0x5C, p1Parameter: 0x00, p2Parameter: 2, data: data, expectedResponseLength: 0x04)
+     tag.sendCommand(apdu: apdu, completionHandler: completionHandler)
+
+ &#125;</code></pre>
 </li>
 </ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/12/11/cocoapods-rubyMine/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
+<ol start="4">
+<li>示例<blockquote>
+<p>以读取上海公交卡为例，读取并解析了部分公交卡中的信息，如：余额、乘车记录等<br>  <img src="/2020/12/16/iOS-CoreNFC/RPReplay_Final1590976131.gif" alt="alt"></p>
+</blockquote>
+</li>
+</ol>
+<h4 id="六、其他"><a href="#六、其他" class="headerlink" title="六、其他"></a>六、其他</h4><ul>
+<li>示例的demo地址: <a target="_blank" rel="noopener" href="https://github.com/lhs7248/LSNFC">LSNFC</a>，希望本文对你有所帮助，有颗小🌟🌟就更开心了</li>
+<li>FeliCa 类型的可以参考：<a href="">TRETJapanNFCReader</a></li>
+<li>使用到的文档<a target="_blank" rel="noopener" href="https://cardwerk.com/iso7816-4-annex-e-examples-card-profiles">iso7816-4-annex-e-examples-card-profiles</a>、<a target="_blank" rel="noopener" href="https://wiki.nfc.im/books/%E6%99%BA%E8%83%BD%E5%8D%A1%E6%89%8B%E5%86%8C/page/%E5%8C%97%E4%BA%AC%E5%B8%82%E6%94%BF%E5%85%AC%E4%BA%A4%E4%B8%80%E5%8D%A1%E9%80%9A%EF%BC%88bmac%EF%BC%89">智能卡手册</a></li>
+</ul>
+
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/11/cocoapods-rubyMine/" rel="prev" title="关于如何使用rubyMine调试cocoapods插件">
+      <i class="fa fa-chevron-left"></i> 关于如何使用rubyMine调试cocoapods插件
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
       </footer>
+    
   </article>
   
   
-  
-
-
   
 
 
@@ -408,6 +450,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">一、简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%8C%E3%80%81iOS13%E5%85%B3%E4%BA%8ENFC%E8%83%BD%E5%8A%9B%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">二、iOS13关于NFC能力介绍</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%89%E3%80%81iOS13%E4%B8%8ANFC%E6%8A%80%E6%9C%AF%E7%9A%84%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">三、iOS13上NFC技术的使用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9B%9B%E3%80%81iOS-13-%E4%BD%BF%E7%94%A8NFC%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="nav-number">4.</span> <span class="nav-text">四、iOS 13 使用NFC的步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E4%B8%8A%E6%B5%B7%E5%85%AC%E4%BA%A4%E5%8D%A1-ISO7816"><span class="nav-number">5.</span> <span class="nav-text">五、上海公交卡(ISO7816)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E5%85%B6%E4%BB%96"><span class="nav-number">6.</span> <span class="nav-text">六、其他</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
