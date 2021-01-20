@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="简介git 作为为代码管理的工具，本文主要记录一下在工作中经常使用的git 命令。 Git    初始化git init 常用来初始化git 仓库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 常用的命令行">
+<meta property="og:url" content="http://example.com/2021/01/13/gitCommand/index.html">
+<meta property="og:site_name" content="lhs7248的博客">
+<meta property="og:description" content="简介git 作为为代码管理的工具，本文主要记录一下在工作中经常使用的git 命令。 Git    初始化git init 常用来初始化git 仓库">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-01-13T07:57:11.000Z">
+<meta property="article:modified_time" content="2021-01-13T08:56:26.419Z">
+<meta property="article:author" content="lhs728">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2021/01/13/gitCommand/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Git 常用的命令行 | lhs7248的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2c28b34ebf94902f8372b65ff331f6e1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">lhs7248的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录一点有意义的事</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/lhs7248" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/13/gitCommand/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lhs728">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lhs7248的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Git 常用的命令行
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2021-01-13 15:57:11 / Modified: 16:56:26" itemprop="dateCreated datePublished" datetime="2021-01-13T15:57:11+08:00">2021-01-13</time>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>978</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>1 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><pre><code>git 作为为代码管理的工具，本文主要记录一下在工作中经常使用的git 命令。</code></pre>
+<h4 id="Git-初始化"><a href="#Git-初始化" class="headerlink" title="Git    初始化"></a>Git    初始化</h4><pre><code>git init 常用来初始化git 仓库</code></pre>
+<a id="more"></a>
+
+<h4 id="git-提交命令"><a href="#git-提交命令" class="headerlink" title="git 提交命令"></a>git 提交命令</h4><pre><code>git add 用来添加修改的变化
+
+git add . 是用来添加所有的修改变化
+
+git commit 是用来提交到本地仓库
+
+git commit -a -m&quot;描述信息&quot;</code></pre>
+<h4 id="git-pull-远端的仓库"><a href="#git-pull-远端的仓库" class="headerlink" title="git pull 远端的仓库"></a>git pull 远端的仓库</h4><pre><code>git pull 拉取远端的仓库
+
+当在使用pull的时候会发生冲突，如果是iOS开发建议使用Xcode来解决冲突,(冲突主要是集中在&lt;&lt;&lt;&lt; 在这中间&gt;&gt;&gt;)
+
+git pull -p 强制更新本地大分支相关</code></pre>
+<h4 id="git-push-到远端的仓库"><a href="#git-push-到远端的仓库" class="headerlink" title="git push 到远端的仓库"></a>git push 到远端的仓库</h4><pre><code>git push  
+
+git push origin HEAD:refs/for/CarKeyUserDev</code></pre>
+<h4 id="git-tag-为项目打tag标签"><a href="#git-tag-为项目打tag标签" class="headerlink" title="git tag 为项目打tag标签"></a>git tag 为项目打tag标签</h4><pre><code>git tag -l 查看所有的tag
+
+git tag -v +tag的标签内容
+
+git checkout tag-name 根据tag的name拉取相应tag位置的代码
+
+git tag -a 版本号 -m &#39;版本描述&#39;
+
+git push -a tags 将所有的tag push到远端</code></pre>
+<h4 id="git-branch-为项目开分支"><a href="#git-branch-为项目开分支" class="headerlink" title="git branch 为项目开分支"></a>git branch 为项目开分支</h4><pre><code>git branch -a 查看所有的branch
+
+git checkout branchName  切换分支
+
+git branch -D branchName 删除相应的分支
+
+git checkout -b branchName 新建新的分支</code></pre>
+<h4 id="git-cherry－pick-对某次提交进行拷贝"><a href="#git-cherry－pick-对某次提交进行拷贝" class="headerlink" title="git cherry－pick 对某次提交进行拷贝"></a>git cherry－pick 对某次提交进行拷贝</h4><pre><code>git cherry-pick 对某次提交进行拷贝</code></pre>
+<h4 id="git-rebase-暂时不知道"><a href="#git-rebase-暂时不知道" class="headerlink" title="git rebase 暂时不知道"></a>git rebase 暂时不知道</h4><pre><code>需要进行补充的信息</code></pre>
+<h5 id="git-提交如何恢复"><a href="#git-提交如何恢复" class="headerlink" title="git 提交如何恢复"></a>git 提交如何恢复</h5><pre><code>git reflog 引用日志
+
+find .git/objects -type f | xargs ls -lt | sed 30q 查看最近git add 的操作</code></pre>
+<h3 id="git-fsck-–full"><a href="#git-fsck-–full" class="headerlink" title="git fsck –full"></a>git fsck –full</h3><pre><code>查找本地删除掉的commitid
+每次的commit都会在git文件夹中，就算删除掉的</code></pre>
+<h4 id="删除远程的分支和tag"><a href="#删除远程的分支和tag" class="headerlink" title="删除远程的分支和tag"></a>删除远程的分支和tag</h4><pre><code>删除分支    
+$ git push origin --delete &lt;branchName&gt;
+删除tag
+git push origin --delete tag &lt;tagname&gt;</code></pre>
+<h4 id="配置git的代理"><a href="#配置git的代理" class="headerlink" title="配置git的代理"></a>配置git的代理</h4><pre><code>[http]
+        proxy = socks5://127.0.0.1:1086
+ [https]
+        proxy = socks5://127.0.0.1:1086</code></pre>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/16/iOS-CoreNFC/" rel="prev" title="iOS-CoreNFC">
+      <i class="fa fa-chevron-left"></i> iOS-CoreNFC
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/01/15/podfile/" rel="next" title="CocoaPods 之 Podfile">
+      CocoaPods 之 Podfile <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Git-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">Git    初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-%E6%8F%90%E4%BA%A4%E5%91%BD%E4%BB%A4"><span class="nav-number">3.</span> <span class="nav-text">git 提交命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-pull-%E8%BF%9C%E7%AB%AF%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">4.</span> <span class="nav-text">git pull 远端的仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-push-%E5%88%B0%E8%BF%9C%E7%AB%AF%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">5.</span> <span class="nav-text">git push 到远端的仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-tag-%E4%B8%BA%E9%A1%B9%E7%9B%AE%E6%89%93tag%E6%A0%87%E7%AD%BE"><span class="nav-number">6.</span> <span class="nav-text">git tag 为项目打tag标签</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-branch-%E4%B8%BA%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%88%86%E6%94%AF"><span class="nav-number">7.</span> <span class="nav-text">git branch 为项目开分支</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-cherry%EF%BC%8Dpick-%E5%AF%B9%E6%9F%90%E6%AC%A1%E6%8F%90%E4%BA%A4%E8%BF%9B%E8%A1%8C%E6%8B%B7%E8%B4%9D"><span class="nav-number">8.</span> <span class="nav-text">git cherry－pick 对某次提交进行拷贝</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-rebase-%E6%9A%82%E6%97%B6%E4%B8%8D%E7%9F%A5%E9%81%93"><span class="nav-number">9.</span> <span class="nav-text">git rebase 暂时不知道</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#git-%E6%8F%90%E4%BA%A4%E5%A6%82%E4%BD%95%E6%81%A2%E5%A4%8D"><span class="nav-number">9.1.</span> <span class="nav-text">git 提交如何恢复</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#git-fsck-%E2%80%93full"><span class="nav-number"></span> <span class="nav-text">git fsck –full</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E8%BF%9C%E7%A8%8B%E7%9A%84%E5%88%86%E6%94%AF%E5%92%8Ctag"><span class="nav-number">1.</span> <span class="nav-text">删除远程的分支和tag</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEgit%E7%9A%84%E4%BB%A3%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">配置git的代理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">lhs728</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lhs7248" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lhs7248" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:lhs7248@126.com" title="E-Mail → mailto:lhs7248@126.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lhs728</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="Symbols count total">22k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">20 mins.</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
