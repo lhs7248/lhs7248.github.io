@@ -416,7 +416,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-20 15:23:55" itemprop="dateModified" datetime="2021-01-20T15:23:55+08:00">2021-01-20</time>
+                <time title="Modified: 2021-01-20 17:23:14" itemprop="dateModified" datetime="2021-01-20T17:23:14+08:00">2021-01-20</time>
               </span>
 
           <br>
@@ -467,7 +467,6 @@
 <li><p>iOS13带来了dyld3，虽然dyld3在WWDC2017的时候介绍过，但是iOS13终于带入了它；dyld3可以缓存runtime的dependency（库）来改善热启动的耗时</p>
 <pre><code> *  Dynamic Linker loads shared libraries and frameworks
  *  Introduces caching of runtime dependencies to improve warm launch</code></pre>
-<p> NEW</p>
 </li>
 <li><p>为了充分利用dyld3带来的优化，苹果建议避免链接不使用的动态库，以及启动时避免使用类似DLOpen和NSBundleLoad的动态库的加载（loading），因为这会抵消缓存所带来的优势。最后就是你需要硬链接你的依赖dependency库，现在这个过程比之前更快了。（硬链接应该是dyld3自带的功能？）</p>
 <p> <img src="/2021/01/18/iOS-Launch/DYLD3Avoid.png" alt="alt"></p>
@@ -505,7 +504,7 @@
 <li>挑选多个设备来测试，并保证他们在测试过程中的一致性；一定要包含一些旧的设备，以及你的APP所支持的最旧的版本（指iOS操作系统版本）；</li>
 </ol>
 <p><img src="/2021/01/18/iOS-Launch/tips_measure.png" alt="alt"></p>
-<h5 id="3、使用-XCTest来衡量启动"><a href="#3、使用-XCTest来衡量启动" class="headerlink" title="3、使用 XCTest来衡量启动"></a>3、使用 <code>XCTest</code>来衡量启动</h5><p><img src="/xctest_launch.png" alt="alt"></p>
+<h5 id="3、使用-XCTest来衡量启动"><a href="#3、使用-XCTest来衡量启动" class="headerlink" title="3、使用 XCTest来衡量启动"></a>3、使用 <code>XCTest</code>来衡量启动</h5><p><img src="/2021/01/18/iOS-Launch/xctest_launch.png" alt="alt"></p>
 <h4 id="四、使用Instruments来分析启动"><a href="#四、使用Instruments来分析启动" class="headerlink" title="四、使用Instruments来分析启动"></a>四、使用Instruments来分析启动</h4><p>测量的三个提示和技巧：</p>
 <h5 id="1、最小化启动过程"><a href="#1、最小化启动过程" class="headerlink" title="1、最小化启动过程"></a>1、最小化启动过程</h5><p><img src="/2021/01/18/iOS-Launch/minimize_work.png" alt="alt"></p>
 <h5 id="2、按照优先级安排启动过程"><a href="#2、按照优先级安排启动过程" class="headerlink" title="2、按照优先级安排启动过程"></a>2、按照优先级安排启动过程</h5><blockquote>
@@ -535,7 +534,7 @@
 </li>
 </ul>
 <h5 id="3、XCTest-耗时分析"><a href="#3、XCTest-耗时分析" class="headerlink" title="3、XCTest 耗时分析"></a>3、XCTest 耗时分析</h5><p> XCTest会去掉冷启动带来的数据干扰和误差，默认执行5次热启动，然后把数据汇总。</p>
-<p>  <img src="/2021/01/18/iOS-Launch/xctest.png" alt="alt"></p>
+<p>  <img src="/xctest.png" alt="alt"></p>
 <h5 id="4、iOS系统进行的优化"><a href="#4、iOS系统进行的优化" class="headerlink" title="4、iOS系统进行的优化"></a>4、iOS系统进行的优化</h5><ul>
 <li><p>dyld3 的优化</p>
 </li>
