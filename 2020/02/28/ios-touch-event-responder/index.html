@@ -28,7 +28,7 @@
 <meta property="og:description" content="一、 背景最近在做小程序框架，在对标微信小程序的API的过程中发现有部分组件为原生组件，例如：video、map 等。原本考虑的方案为在WKWebView的Scroll View层级添加对应的Native覆层来处理，后面经调研发现在iOS的微信提供了同屏渲染的机制，在实现的过程中发现WKChildScrollView 添加的subView不能响应target-action 和 UITapGestu">
 <meta property="og:locale">
 <meta property="article:published_time" content="2020-02-28T02:05:33.000Z">
-<meta property="article:modified_time" content="2021-01-13T08:58:53.960Z">
+<meta property="article:modified_time" content="2021-01-26T01:09:05.438Z">
 <meta property="article:author" content="lhs728">
 <meta property="article:tag" content="Event">
 <meta name="twitter:card" content="summary">
@@ -208,7 +208,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-13 16:58:53" itemprop="dateModified" datetime="2021-01-13T16:58:53+08:00">2021-01-13</time>
+                <time title="Modified: 2021-01-26 09:09:05" itemprop="dateModified" datetime="2021-01-26T09:09:05+08:00">2021-01-26</time>
               </span>
 
           <br>
@@ -261,7 +261,7 @@
 <li>寻找到最佳响应者后，接下来的事情便是事件在响应链中的传递及响应了，关于响应链相关的内容详见[事件的响应及在响应链中的传递]一节。事实上，事件除了被响应者消耗，还能被手势识别器或是target-action模式捕捉并消耗掉。其中涉及对触摸事件的响应优先级，详见[事件的三徒弟UIResponder、UIGestureRecognizer、UIControl]一节。</li>
 <li>触摸事件历经坎坷后要么被某个响应对象捕获后释放，要么致死也没能找到能够响应的对象，最终释放。至此，这个触摸事件的使命就算终结了。runloop若没有其他事件需要处理，也将重归于眠，等待新的事件到来后唤醒。</li>
 </ol>
-<h3 id="三、-触摸、事件、响应者"><a href="#三、-触摸、事件、响应者" class="headerlink" title="三、 触摸、事件、响应者"></a>三、 触摸、事件、响应者</h3><blockquote>
+<h3 id="三、触摸-事件-响应者"><a href="#三、触摸-事件-响应者" class="headerlink" title="三、触摸 事件 响应者"></a>三、触摸 事件 响应者</h3><blockquote>
 <p>什么事触摸？什么事件？什么事响应者？</p>
 </blockquote>
 <h5 id="1-UITouch"><a href="#1-UITouch" class="headerlink" title="1) UITouch"></a>1) UITouch</h5><blockquote>
@@ -471,12 +471,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2018/05/22/ios-Setting/" rel="prev" title="iOS_Setting">
-      <i class="fa fa-chevron-left"></i> iOS_Setting
+    <a href="/2019/07/18/ios-mobileprovision/" rel="prev" title="如何编写iOS的通用构建脚本？">
+      <i class="fa fa-chevron-left"></i> 如何编写iOS的通用构建脚本？
     </a></div>
       <div class="post-nav-item">
-    <a href="/2020/12/11/cocoapods-rubyMine/" rel="next" title="关于如何使用rubyMine调试cocoapods插件">
-      关于如何使用rubyMine调试cocoapods插件 <i class="fa fa-chevron-right"></i>
+    <a href="/2020/04/16/iOS-CoreNFC/" rel="next" title="iOS-CoreNFC">
+      iOS-CoreNFC <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -536,7 +536,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81-%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">一、 背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">2.</span> <span class="nav-text">二、事件的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E7%B3%BB%E7%BB%9F%E5%93%8D%E5%BA%94%E9%98%B6%E6%AE%B5"><span class="nav-number">2.0.1.</span> <span class="nav-text">1. 系统响应阶段</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-APP%E5%93%8D%E5%BA%94%E9%98%B6%E6%AE%B5"><span class="nav-number">2.0.2.</span> <span class="nav-text">2. APP响应阶段</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81-%E8%A7%A6%E6%91%B8%E3%80%81%E4%BA%8B%E4%BB%B6%E3%80%81%E5%93%8D%E5%BA%94%E8%80%85"><span class="nav-number">3.</span> <span class="nav-text">三、 触摸、事件、响应者</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-UITouch"><span class="nav-number">3.0.1.</span> <span class="nav-text">1) UITouch</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-UIEvent"><span class="nav-number">3.0.2.</span> <span class="nav-text">2) UIEvent</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-UIResponder"><span class="nav-number">3.0.3.</span> <span class="nav-text">3) UIResponder</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81-%E5%AF%BB%E6%89%BE%E4%BA%8B%E4%BB%B6%E7%9A%84%E6%9C%80%E4%BD%B3%E5%93%8D%E5%BA%94%E8%80%85%EF%BC%88Hit-Testing%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">四、 寻找事件的最佳响应者（Hit-Testing）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1%EF%BC%89%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%87%AA%E4%B8%8B%E8%80%8C%E4%B8%8A%E7%9A%84%E4%BC%A0%E9%80%92"><span class="nav-number">4.0.1.</span> <span class="nav-text">1）事件的自下而上的传递</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2%EF%BC%89Hit-Testing%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">4.0.2.</span> <span class="nav-text">2）Hit-Testing的本质</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5%E3%80%81-%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94%E5%8F%8A%E5%9C%A8%E5%93%8D%E5%BA%94%E9%93%BE%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92"><span class="nav-number">5.</span> <span class="nav-text">5、 事件的响应及在响应链中的传递</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1%E3%80%81%E4%BA%8B%E4%BB%B6%E5%93%8D%E5%BA%94%E7%9A%84%E5%89%8D%E5%A5%8F"><span class="nav-number">5.0.1.</span> <span class="nav-text">1、事件响应的前奏</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94"><span class="nav-number">5.0.2.</span> <span class="nav-text">2、事件的响应</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E4%BC%A0%E9%80%92%EF%BC%88%E5%93%8D%E5%BA%94%E9%93%BE%E6%9D%A1%EF%BC%89"><span class="nav-number">5.0.3.</span> <span class="nav-text">3、事件的传递（响应链条）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6%E3%80%81UIResponder%E3%80%81UIGestureRecognizer%E3%80%81UIControl"><span class="nav-number">6.</span> <span class="nav-text">6、UIResponder、UIGestureRecognizer、UIControl</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-UIGestureRecognizer"><span class="nav-number">6.0.1.</span> <span class="nav-text">1. UIGestureRecognizer</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-UIControl"><span class="nav-number">6.0.2.</span> <span class="nav-text">2. UIControl</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7%E3%80%81-%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">7、 总结</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81-%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">一、 背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="nav-number">2.</span> <span class="nav-text">二、事件的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E7%B3%BB%E7%BB%9F%E5%93%8D%E5%BA%94%E9%98%B6%E6%AE%B5"><span class="nav-number">2.0.1.</span> <span class="nav-text">1. 系统响应阶段</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-APP%E5%93%8D%E5%BA%94%E9%98%B6%E6%AE%B5"><span class="nav-number">2.0.2.</span> <span class="nav-text">2. APP响应阶段</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E8%A7%A6%E6%91%B8-%E4%BA%8B%E4%BB%B6-%E5%93%8D%E5%BA%94%E8%80%85"><span class="nav-number">3.</span> <span class="nav-text">三、触摸 事件 响应者</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-UITouch"><span class="nav-number">3.0.1.</span> <span class="nav-text">1) UITouch</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-UIEvent"><span class="nav-number">3.0.2.</span> <span class="nav-text">2) UIEvent</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-UIResponder"><span class="nav-number">3.0.3.</span> <span class="nav-text">3) UIResponder</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81-%E5%AF%BB%E6%89%BE%E4%BA%8B%E4%BB%B6%E7%9A%84%E6%9C%80%E4%BD%B3%E5%93%8D%E5%BA%94%E8%80%85%EF%BC%88Hit-Testing%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">四、 寻找事件的最佳响应者（Hit-Testing）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1%EF%BC%89%E4%BA%8B%E4%BB%B6%E7%9A%84%E8%87%AA%E4%B8%8B%E8%80%8C%E4%B8%8A%E7%9A%84%E4%BC%A0%E9%80%92"><span class="nav-number">4.0.1.</span> <span class="nav-text">1）事件的自下而上的传递</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2%EF%BC%89Hit-Testing%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">4.0.2.</span> <span class="nav-text">2）Hit-Testing的本质</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5%E3%80%81-%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94%E5%8F%8A%E5%9C%A8%E5%93%8D%E5%BA%94%E9%93%BE%E4%B8%AD%E7%9A%84%E4%BC%A0%E9%80%92"><span class="nav-number">5.</span> <span class="nav-text">5、 事件的响应及在响应链中的传递</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1%E3%80%81%E4%BA%8B%E4%BB%B6%E5%93%8D%E5%BA%94%E7%9A%84%E5%89%8D%E5%A5%8F"><span class="nav-number">5.0.1.</span> <span class="nav-text">1、事件响应的前奏</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%93%8D%E5%BA%94"><span class="nav-number">5.0.2.</span> <span class="nav-text">2、事件的响应</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3%E3%80%81%E4%BA%8B%E4%BB%B6%E7%9A%84%E4%BC%A0%E9%80%92%EF%BC%88%E5%93%8D%E5%BA%94%E9%93%BE%E6%9D%A1%EF%BC%89"><span class="nav-number">5.0.3.</span> <span class="nav-text">3、事件的传递（响应链条）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6%E3%80%81UIResponder%E3%80%81UIGestureRecognizer%E3%80%81UIControl"><span class="nav-number">6.</span> <span class="nav-text">6、UIResponder、UIGestureRecognizer、UIControl</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-UIGestureRecognizer"><span class="nav-number">6.0.1.</span> <span class="nav-text">1. UIGestureRecognizer</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-UIControl"><span class="nav-number">6.0.2.</span> <span class="nav-text">2. UIControl</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7%E3%80%81-%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">7、 总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -550,7 +550,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -563,7 +563,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-count">7</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -607,12 +607,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="Symbols count total">22k</span>
+    <span title="Symbols count total">25k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">20 mins.</span>
+    <span title="Reading time total">23 mins.</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
   </div>

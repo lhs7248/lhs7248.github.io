@@ -416,7 +416,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-20 17:23:14" itemprop="dateModified" datetime="2021-01-20T17:23:14+08:00">2021-01-20</time>
+                <time title="Modified: 2021-01-25 17:19:13" itemprop="dateModified" datetime="2021-01-25T17:19:13+08:00">2021-01-25</time>
               </span>
 
           <br>
@@ -451,153 +451,14 @@
 <li>Use Instruments to profile your launch</li>
 <li>Track your launch over time</li>
 </ul>
-<h4 id="二、启动"><a href="#二、启动" class="headerlink" title="二、启动"></a>二、启动</h4><h5 id="1、为什么启动重要？"><a href="#1、为什么启动重要？" class="headerlink" title="1、为什么启动重要？"></a>1、为什么启动重要？</h5><ul>
-<li>App 启动是和用户的第一个交互过程，所以要尽量缩短这个过程的时间，提升用户体验。</li>
-<li>指示代码的整体性能。</li>
-<li>影响系统性能和电池。</li>
-</ul>
-<h5 id="2、启动的类型"><a href="#2、启动的类型" class="headerlink" title="2、启动的类型"></a>2、启动的类型</h5><p><img src="/2021/01/18/iOS-Launch/launch_type.png" alt="alt"></p>
-<h5 id="3、400-ms-用来渲染首帧页面"><a href="#3、400-ms-用来渲染首帧页面" class="headerlink" title="3、400 ms 用来渲染首帧页面"></a>3、400 ms 用来渲染首帧页面</h5><ul>
-<li>最好是把启动时间控制在400ms内，因为这是启动动画的时间；</li>
-<li>系统要用100ms的时间来初始化APP，所以留给了你300ms的时间来构建你的第一个view；</li>
-<li>你可以懒加载或者异步加载数据。</li>
-</ul>
-<h5 id="4、启动的各个阶段"><a href="#4、启动的各个阶段" class="headerlink" title="4、启动的各个阶段"></a>4、启动的各个阶段</h5><p><img src="/2021/01/18/iOS-Launch/launch_Phases.png" alt="alt"></p>
-<h5 id="5、系统层面DYLD3"><a href="#5、系统层面DYLD3" class="headerlink" title="5、系统层面DYLD3"></a>5、系统层面<code>DYLD3</code></h5><ol>
-<li><p>iOS13带来了dyld3，虽然dyld3在WWDC2017的时候介绍过，但是iOS13终于带入了它；dyld3可以缓存runtime的dependency（库）来改善热启动的耗时</p>
-<pre><code> *  Dynamic Linker loads shared libraries and frameworks
- *  Introduces caching of runtime dependencies to improve warm launch</code></pre>
-</li>
-<li><p>为了充分利用dyld3带来的优化，苹果建议避免链接不使用的动态库，以及启动时避免使用类似DLOpen和NSBundleLoad的动态库的加载（loading），因为这会抵消缓存所带来的优势。最后就是你需要硬链接你的依赖dependency库，现在这个过程比之前更快了。（硬链接应该是dyld3自带的功能？）</p>
-<p> <img src="/2021/01/18/iOS-Launch/DYLD3Avoid.png" alt="alt"></p>
-</li>
-</ol>
-<h5 id="6、libSystem-Init"><a href="#6、libSystem-Init" class="headerlink" title="6、libSystem Init"></a>6、libSystem Init</h5><p>   libSystemInit是System interface阶段的后面一部分内容，这是在给你的APP初始化低级别的系统组件，这个过程是固定的系统层面的消耗。开发者不必过多关注这个阶段。</p>
-<pre><code>* Initializes the interfaces with low level system components 
-* System side work with a fixed cost</code></pre>
-<h5 id="7、Runtime-Init"><a href="#7、Runtime-Init" class="headerlink" title="7、Runtime Init"></a>7、Runtime Init</h5><p><img src="/2021/01/18/iOS-Launch/Runtime_init.png" alt="alt"></p>
-<p><img src="/2021/01/18/iOS-Launch/Static_Runtime_Initialization.png" alt="alt"></p>
-<h5 id="8、UIKit-初始化"><a href="#8、UIKit-初始化" class="headerlink" title="8、UIKit 初始化"></a>8、UIKit 初始化</h5><p>系统会在这一步实例化你的UIApplication和UIApplicationDelegate。这个阶段大部分是系统的工作，设置事件处理和系统集成/整合。</p>
-<p><img src="/2021/01/18/iOS-Launch/UIKit_init.png" alt="alt"></p>
-<h5 id="9、Application-初始化"><a href="#9、Application-初始化" class="headerlink" title="9、Application 初始化"></a>9、Application 初始化</h5><p>苹果建议推迟跟第一屏展示不相关的工作，把这些工作放到后台去做或者全部推迟。<br>如果你采用了UIScenes的API，则可以在多个Scenes之间共享资源，这是为了避免多次去做不必要的工作。</p>
-<p><img src="/2021/01/18/iOS-Launch/Application_init.png" alt="alt"></p>
-<h5 id="10、首帧渲染"><a href="#10、首帧渲染" class="headerlink" title="10、首帧渲染"></a>10、首帧渲染</h5><p>首帧渲染优化方式：</p>
-<ul>
-<li>减少视图view的数量；</li>
-<li>减少视图view的层级（flattening your views）；</li>
-<li>懒加载那些在启动过程中不会立即进行展示的view；</li>
-<li>注意你的autolayout，尽量减少约束的数量；——干脆使用手动frame计算</li>
-</ul>
-<p><img src="/2021/01/18/iOS-Launch/first_frame_render1.png" alt="alt"></p>
-<h5 id="11、Extended阶段"><a href="#11、Extended阶段" class="headerlink" title="11、Extended阶段"></a>11、Extended阶段</h5><p>利用os_signpost API来进行衡量</p>
-<p><img src="/2021/01/18/iOS-Launch/Extended.png" alt="alt"></p>
-<h4 id="三、如何衡量App的启动？"><a href="#三、如何衡量App的启动？" class="headerlink" title="三、如何衡量App的启动？"></a>三、如何衡量App的启动？</h4><h5 id="1、-测量启动过程"><a href="#1、-测量启动过程" class="headerlink" title="1、 测量启动过程"></a>1、 测量启动过程</h5><p>要去除掉网络和后台进程的干扰。</p>
-<h5 id="2、设置干净和一致的测试环境"><a href="#2、设置干净和一致的测试环境" class="headerlink" title="2、设置干净和一致的测试环境"></a>2、设置干净和一致的测试环境</h5><p>Xcode11开始，XCTest也提供了测量启动性能的API。只需要几行代码，Xcode就能重复启动你的APP，并提供启动性能的统计结果。</p>
-<p>如下几个tips：</p>
-<ol>
-<li>重启手机，然后静置几分钟，用来清除任何启动时的工作；</li>
-<li>设置手机为飞行模式，或者使用Mock网络数据；</li>
-<li>iCloud在后台工作会干扰APP启动时间的测量，所以测量过程中使用不变的iCloud账号和不变的数据，或者干脆退出iCloud；</li>
-<li>使用release版本的APP进行测试，避免debug代码的干扰，还能享受编译器的优化（跟线上用户保持一致）；</li>
-<li>测试warm launch的数据，这样子可以保持更好的一致性，一部分APP的数据已经在内存里了，一部分系统服务也已经跑起来了；</li>
-<li>创造多个mock数据是非常重要的，比如用户数据量少和用户数据量多的情况，都要测量到；</li>
-<li>挑选多个设备来测试，并保证他们在测试过程中的一致性；一定要包含一些旧的设备，以及你的APP所支持的最旧的版本（指iOS操作系统版本）；</li>
-</ol>
-<p><img src="/2021/01/18/iOS-Launch/tips_measure.png" alt="alt"></p>
-<h5 id="3、使用-XCTest来衡量启动"><a href="#3、使用-XCTest来衡量启动" class="headerlink" title="3、使用 XCTest来衡量启动"></a>3、使用 <code>XCTest</code>来衡量启动</h5><p><img src="/2021/01/18/iOS-Launch/xctest_launch.png" alt="alt"></p>
-<h4 id="四、使用Instruments来分析启动"><a href="#四、使用Instruments来分析启动" class="headerlink" title="四、使用Instruments来分析启动"></a>四、使用Instruments来分析启动</h4><p>测量的三个提示和技巧：</p>
-<h5 id="1、最小化启动过程"><a href="#1、最小化启动过程" class="headerlink" title="1、最小化启动过程"></a>1、最小化启动过程</h5><p><img src="/2021/01/18/iOS-Launch/minimize_work.png" alt="alt"></p>
-<h5 id="2、按照优先级安排启动过程"><a href="#2、按照优先级安排启动过程" class="headerlink" title="2、按照优先级安排启动过程"></a>2、按照优先级安排启动过程</h5><blockquote>
-<p>Modernizing Grand Central Dispatch Usage WWDC 2017</p>
-</blockquote>
-<p><img src="/2021/01/18/iOS-Launch/Prioritize.png" alt="alt"></p>
-<h5 id="3、优化过程"><a href="#3、优化过程" class="headerlink" title="3、优化过程"></a>3、优化过程</h5><p><img src="/2021/01/18/iOS-Launch/optimize.png" alt="alt"></p>
-<h5 id="4、Apple新带来的启动监控方式-MetricKit"><a href="#4、Apple新带来的启动监控方式-MetricKit" class="headerlink" title="4、Apple新带来的启动监控方式 MetricKit"></a>4、Apple新带来的启动监控方式 MetricKit</h5><p> 在iOS 13 上，苹果推出了<code>MetricKit</code>，用来帮助开发者优化App的性能。</p>
-<p>后续会有文章专门写有关<code>MetricKit</code>相关的内容。</p>
-<h4 id="五、使用Instruments-和-XCTest来优化Demo"><a href="#五、使用Instruments-和-XCTest来优化Demo" class="headerlink" title="五、使用Instruments 和 XCTest来优化Demo"></a>五、使用Instruments 和 XCTest来优化Demo</h4><h5 id="1、Instruments-进行启动耗时分析"><a href="#1、Instruments-进行启动耗时分析" class="headerlink" title="1、Instruments 进行启动耗时分析"></a>1、Instruments 进行启动耗时分析</h5><ul>
-<li>Instruments重新编译APP会使用release模式</li>
-<li>Xcode 11的Instruments提供了启动时间的模板，可以用来专门做这一块的性能统计和分析。</li>
-</ul>
-<h5 id="2、分析启动线程"><a href="#2、分析启动线程" class="headerlink" title="2、分析启动线程"></a>2、分析启动线程</h5><ul>
-<li><p>紫色表示pre-main阶段，在main函数执行前的阶段。</p>
-</li>
-<li><p>绿色表示进入到main阶段。</p>
-</li>
-<li><p>灰色表示线程被block住了，该线程目前啥都没做。</p>
-</li>
-<li><p>红色表示可执行，也就是待调度的状态，但是缺乏CPU资源。</p>
-</li>
-<li><p>orange代表该线程正在执行某个操作，但是被某个更高优先级的线程打断了，高优先级的线程完成了它才能继续执行</p>
-</li>
-<li><p>蓝色表示正在运行中的线程，正在被CPU调度中。</p>
-<p><img src="/2021/01/18/iOS-Launch/instrument_profile.png" alt="alt"></p>
-</li>
-</ul>
-<h5 id="3、XCTest-耗时分析"><a href="#3、XCTest-耗时分析" class="headerlink" title="3、XCTest 耗时分析"></a>3、XCTest 耗时分析</h5><p> XCTest会去掉冷启动带来的数据干扰和误差，默认执行5次热启动，然后把数据汇总。</p>
-<p>  <img src="/xctest.png" alt="alt"></p>
-<h5 id="4、iOS系统进行的优化"><a href="#4、iOS系统进行的优化" class="headerlink" title="4、iOS系统进行的优化"></a>4、iOS系统进行的优化</h5><ul>
-<li><p>dyld3 的优化</p>
-</li>
-<li><p>Scheduler 的优化</p>
-</li>
-<li><p>autolayout</p>
-<p>系统已经做和将要做的优化：</p>
-<p><img src="/2021/01/18/iOS-Launch/system_improvement.png" alt="alt"></p>
-</li>
-</ul>
-<h4 id="六、关于Dyld3"><a href="#六、关于Dyld3" class="headerlink" title="六、关于Dyld3"></a>六、关于Dyld3</h4><blockquote>
-<p>关于dyld的含义，通过Man dyld可以看到对应的简介为：the dynamic linker</p>
-</blockquote>
-<p> iOS 13之后，第三方启动速度快速提升的一个主要原因是Dyld3开放给第三方App。</p>
-<h5 id="1、dyld3-VS-dyld2"><a href="#1、dyld3-VS-dyld2" class="headerlink" title="1、dyld3 VS dyld2"></a>1、dyld3 VS dyld2</h5><p>  <img src="/2021/01/18/iOS-Launch/dyld3.png" alt="alt"></p>
-<h5 id="2、dyld3-所做内容"><a href="#2、dyld3-所做内容" class="headerlink" title="2、dyld3 所做内容"></a>2、dyld3 所做内容</h5><p>  <img src="/2021/01/18/iOS-Launch/dyld3_detail.png" alt="alt"></p>
-<h5 id="3、dyld3-进程外执行的内容"><a href="#3、dyld3-进程外执行的内容" class="headerlink" title="3、dyld3 进程外执行的内容"></a>3、dyld3 进程外执行的内容</h5><p>  <img src="/2021/01/18/iOS-Launch/dyld3_out_of_process.png" alt="alt"></p>
-<h5 id="4、dyld3-进程内执行的内容"><a href="#4、dyld3-进程内执行的内容" class="headerlink" title="4、dyld3 进程内执行的内容"></a>4、dyld3 进程内执行的内容</h5><p>  <img src="/2021/01/18/iOS-Launch/dyld3_in_process.png" alt="alt"></p>
-<h5 id="5、dyld3-缓存模块"><a href="#5、dyld3-缓存模块" class="headerlink" title="5、dyld3 缓存模块"></a>5、dyld3 缓存模块</h5><p>  <img src="/2021/01/18/iOS-Launch/dyld3_cache.png" alt="alt"></p>
-<p> 在 iOS 13 之前，所有的第三方 App 都是通过 dyld 2 来启动 App 的，主要过程如下：</p>
-<ul>
-<li>解析 Mach-O 的 Header 和 Load Commands，找到其依赖的库，并递归找到所有依赖的库</li>
-<li>加载 Mach-O 文件</li>
-<li>进行符号查找</li>
-<li>绑定和变基</li>
-<li>运行初始化程序</li>
-</ul>
-<p>在iOS 13以后dyld3 被分为了三个组件：</p>
-<ul>
-<li>一个进程外的 MachO 解析器<ol>
-<li>预先处理了所有可能影响启动速度的 search path、@rpaths 和环境变量</li>
-<li>然后分析 Mach-O 的 Header 和依赖，并完成了所有符号查找的工作</li>
-<li>最后将这些结果创建成了一个启动闭包</li>
-<li>这是一个普通的 daemon 进程，可以使用通常的测试架构</li>
-</ol>
-</li>
-<li>一个进程内的引擎，用来运行启动闭包<ol>
-<li>这部分在进程中处理</li>
-<li>验证启动闭包的安全性，然后映射到 dylib 之中，再跳转到 main 函数</li>
-<li>不需要解析 Mach-O 的 Header 和依赖，也不需要符号查找。</li>
-</ol>
-</li>
-<li>一个启动闭包缓存服务<ol>
-<li>系统 App 的启动闭包被构建在一个 Shared Cache 中， 我们甚至不需要打开一个单独的文件</li>
-<li>对于第三方的 App，我们会在 App 安装或者升级的时候构建这个启动闭包。</li>
-<li>在 iOS、tvOS、watchOS中，这这一切都是 App 启动之前完成的。在 macOS 上，由于有 Side Load App，进程内引擎会在首次启动的时候启动一个 daemon 进程，之后就可以使用启动闭包启动了。</li>
-</ol>
-</li>
-</ul>
-<p>dyld 3 把很多耗时的查找、计算和 I/O 的事前都预先处理好了，这使得启动速度有了很大的提升。</p>
-<h4 id="七、其他"><a href="#七、其他" class="headerlink" title="七、其他"></a>七、其他</h4><ol>
-<li><p>可以用操作系统的 signpost API来标记和测量两个时间周期内的消耗。</p>
-<pre><code> Leverage os_signpost to measure work</code></pre>
-</li>
-<li><p><code>man dyld</code> 查看dyld的具体指令</p>
-<p> Static initializer tracing</p>
-</li>
-</ol>
-<p>参考链接：</p>
-<p><a target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2019/423/">WWDC2019 - 423 - Optimizing App Launch</a></p>
-<p><a target="_blank" rel="noopener" href="https://developer.apple.com/videos/play/wwdc2017/413/"> WWDC2017 - 413 - App Startup Time: Past, Present, and Future </a></p>
-<p><a target="_blank" rel="noopener" href="https://opensource.apple.com/source/dyld/">dyld</a></p>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/01/18/iOS-Launch/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -639,10 +500,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-01-15 16:22:10 / Modified: 16:29:35" itemprop="dateCreated datePublished" datetime="2021-01-15T16:22:10+08:00">2021-01-15</time>
+              <time title="Created: 2021-01-15 16:22:10" itemprop="dateCreated datePublished" datetime="2021-01-15T16:22:10+08:00">2021-01-15</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-25 17:20:32" itemprop="dateModified" datetime="2021-01-25T17:20:32+08:00">2021-01-25</time>
+              </span>
 
           <br>
             <span class="post-meta-item" title="Symbols count in article">
@@ -670,86 +537,14 @@
 
       
           <h4 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h4><p>CocoaPods 作为iOS的包管理工具，在业内非常的流行。我所接触的工程中基本都采用pod来管理依赖，但是大部分的时候对podfile的编写都是工程之间的copy，使用的也都是非常常用的功能。最近在研究CocoaPods的时候了解到podfile 自定义的DSL解析，发现如下详细的使用文档，记录下来以便以后使用回顾。</p>
-<h4 id="二、Podfile-模版"><a href="#二、Podfile-模版" class="headerlink" title="二、Podfile 模版"></a>二、Podfile 模版</h4><p>如下为常见的Podfile 模版：</p>
-<pre><code> platform :ios, &#39;9.0&#39;     
-
- inhibit_all_warnings!      
-
- target &#39;MyApp&#39; do       
-
-     pod &#39;ObjectiveSugar&#39;, &#39;~&gt; 0.5&#39;
-
-     target &#39;MyAppTests&#39; do         
-
-         inherit! :search_paths         
-
-         pod &#39;OCMock&#39;, &#39;~&gt; 2.0.1&#39;       
-
-     end
-
-end
-
-post_install do |installer|       
-    installer.pods_project.targets.each do |target|         
-        puts &quot;#&#123;target.name&#125;&quot;       
-    end     
-end</code></pre>
-<h4 id="三、依赖分析"><a href="#三、依赖分析" class="headerlink" title="三、依赖分析"></a>三、依赖分析</h4><ol>
-<li><p>如果想要使用最新的，则使用如下的方式：</p>
-<pre><code> pod &#39;SSZipArchive&#39;</code></pre>
-</li>
-<li><p>如果想要限定版本，则需要使用如下的方法</p>
-<pre><code>  pod &#39;Objection&#39;, &#39;0.9&#39;</code></pre>
-<p>除了使用上述的方式外，还可以使用如下的方法：</p>
-</li>
-</ol>
-<ul>
-<li><code>= 0.1</code> Version 0.1.</li>
-<li><code>&gt; 0.1</code> Any version higher than 0.1.</li>
-<li><code>&gt;= 0.1</code> Version 0.1 and any higher version.</li>
-<li><code> 0.1</code> Any version lower than 0.1.</li>
-<li><code>= 0.1</code> Version 0.1 and any lower version.</li>
-<li><code>~&gt; 0.1.2</code> Version 0.1.2 and the versions up to 0.2, not including 0.2.  <pre><code>    This operator works based on _the last component_ that you            specify in your version requirement. The example is equal to            </code></pre>
-</li>
-<li><code>&gt;= 0.1.2</code> combined with <code>&lt; 0.2.0</code> and will always match the            latest known version matching your requirements.</li>
-<li><code>~&gt; 0.1.3-beta.0</code> Beta and release versions for 0.1.3, release versions  <pre><code>    up to 0.2 excluding 0.2. Components separated by a dash (-)            will not be considered for the version requirement.</code></pre>
-A list of version requirements can be specified for even more fine grained control.</li>
-</ul>
-<h4 id="四、编译配置"><a href="#四、编译配置" class="headerlink" title="四、编译配置"></a>四、编译配置</h4><p>默认的依赖在安装在target的所有的配置当中，为了调试或者其他目的，可以允许做特殊的操作：</p>
-<pre><code>pod &#39;PonyDebugger&#39;, :configurations =&gt; [&#39;Debug&#39;, &#39;Beta&#39;]
-或者
-pod &#39;PonyDebugger&#39;, :configuration =&gt; &#39;Debug&#39;</code></pre>
-<h4 id="五、Modular-Headers"><a href="#五、Modular-Headers" class="headerlink" title="五、Modular Headers"></a>五、Modular Headers</h4><p> If you would like to use modular headers per Pod you can use the following syntax:<br>    pod ‘SSZipArchive’, :modular_headers =&gt; true<br> Additionally, when you use the <code>use_modular_headers!</code> attribute, you can exclude a particular Pod from modular headers using the following:<br>    pod ‘SSZipArchive’, :modular_headers =&gt; false</p>
-<h4 id="六、Source"><a href="#六、Source" class="headerlink" title="六、Source"></a>六、Source</h4><p>如果需要对source做特殊的处理，可以按照如下的操作进行：</p>
-<pre><code> pod &#39;PonyDebugger&#39;, :source =&gt; &#39;https://github.com/CocoaPods/Specs.git&#39;</code></pre>
-<h4 id="七、Subspecs"><a href="#七、Subspecs" class="headerlink" title="七、Subspecs"></a>七、Subspecs</h4><p>如果想要使用Subspecs，可以通过如下的方式进行：</p>
-<pre><code>pod &#39;QueryKit/Attribute&#39;
-或则
-pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;]</code></pre>
-<h4 id="八、-Test-Specs"><a href="#八、-Test-Specs" class="headerlink" title="八、 Test Specs"></a>八、 Test Specs</h4><p>单元测试可以通过<code>:testspecs</code>的方式来调用，默认<code>pods</code>里面是不包含test specs的：</p>
-<pre><code>  pod &#39;AFNetworking&#39;, :testspecs =&gt; [&#39;UnitTests&#39;, &#39;SomeOtherTests&#39;]</code></pre>
-<h4 id="九、外部获取依赖关系"><a href="#九、外部获取依赖关系" class="headerlink" title="九、外部获取依赖关系"></a>九、外部获取依赖关系</h4><ul>
-<li><p>本地路径</p>
-<pre><code>   pod &#39;AFNetworking&#39;, :path =&gt; &#39;~/Documents/AFNetworking&#39;</code></pre>
-</li>
-<li><p>通过索引仓库</p>
-<pre><code>   To use the `master` branch of the repository:  
-      pod &#39;AFNetworking&#39;, :git =&gt; &#39;https://github.com/gowalla/AFNetworking.git&#39;
-   To use a different branch of the repository:  
-      pod &#39;AFNetworking&#39;, :git =&gt; &#39;https://github.com/gowalla/AFNetworking.git&#39;, :branch =&gt; &#39;dev&#39;
-   To use a tag of the repository:  
-      pod &#39;AFNetworking&#39;, :git =&gt; &#39;https://github.com/gowalla/AFNetworking.git&#39;, :tag =&gt; &#39;0.7.0&#39;
-   Or specify a commit:  
-      pod &#39;AFNetworking&#39;, :git =&gt; &#39;https://github.com/gowalla/AFNetworking.git&#39;, :commit =&gt; &#39;082f8319af&#39;</code></pre>
-</li>
-</ul>
-<ul>
-<li><p>通过podspec不使用索引仓库</p>
-<pre><code>   pod &#39;JSONKit&#39;, :podspec =&gt; &#39;https://example.com/JSONKit.podspec&#39;</code></pre>
-</li>
-</ul>
-<h4 id="十-、source"><a href="#十-、source" class="headerlink" title="十 、source"></a>十 、source</h4><pre><code>  source  &#39; https://github.com/CocoaPods/Specs.git  style=&quot;color:#067d17&quot;&gt;&#39; </code></pre>
-
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/01/15/podfile/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
@@ -791,10 +586,16 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2021-01-13 15:57:11 / Modified: 16:56:26" itemprop="dateCreated datePublished" datetime="2021-01-13T15:57:11+08:00">2021-01-13</time>
+              <time title="Created: 2021-01-13 15:57:11" itemprop="dateCreated datePublished" datetime="2021-01-13T15:57:11+08:00">2021-01-13</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-25 17:40:39" itemprop="dateModified" datetime="2021-01-25T17:40:39+08:00">2021-01-25</time>
+              </span>
 
           <br>
             <span class="post-meta-item" title="Symbols count in article">
@@ -802,7 +603,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>978</span>
+              <span>1k</span>
             </span>
             <span class="post-meta-item" title="Reading time">
               <span class="post-meta-item-icon">
@@ -821,120 +622,11 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><pre><code>git 作为为代码管理的工具，本文主要记录一下在工作中经常使用的git 命令。</code></pre>
+          <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>本文主要记录一下在工作中经常使用的git命令。</p>
 <h4 id="Git-初始化"><a href="#Git-初始化" class="headerlink" title="Git    初始化"></a>Git    初始化</h4><pre><code>git init 常用来初始化git 仓库</code></pre>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2021/01/13/gitCommand/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/16/iOS-CoreNFC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="lhs728">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="lhs7248的博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/12/16/iOS-CoreNFC/" class="post-title-link" itemprop="url">iOS-CoreNFC</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-
-              <time title="Created: 2020-12-16 17:50:59" itemprop="dateCreated datePublished" datetime="2020-12-16T17:50:59+08:00">2020-12-16</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-31 15:11:42" itemprop="dateModified" datetime="2020-12-31T15:11:42+08:00">2020-12-31</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/NFC/" itemprop="url" rel="index"><span itemprop="name">NFC</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="Symbols count in article">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>3.1k</span>
-            </span>
-            <span class="post-meta-item" title="Reading time">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>3 mins.</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h4 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h4><p>本文是关于iOS13 NFC技术的相关学习及探索</p>
-<h4 id="二、iOS13关于NFC能力介绍"><a href="#二、iOS13关于NFC能力介绍" class="headerlink" title="二、iOS13关于NFC能力介绍"></a>二、iOS13关于NFC能力介绍</h4><ul>
-<li><p>在iOS13上Apple 扩展了关于NFC相关的技术能力<br><img src="/2020/12/16/iOS-CoreNFC/iOS13-NFC-Ability.png" alt="alt"></p>
-</li>
-<li><p>关于iOS不同版本对NFC支持信息<br><img src="/2020/12/16/iOS-CoreNFC/iOS13-NFC-Tag.png" alt="alt"></p>
-</li>
-</ul>
-<ul>
-<li><p>在iOS 13系统上NFC的技术支持更加的强大</p>
-<ol>
-<li>iOS13系统基本支持目前已经部署的NFC协议的读写操作</li>
-<li>开发者可以通过iOS Core NFC Framework提供的native protocols与 tags 直接通信</li>
-</ol>
-</li>
-<li><p>主要的（iOS &amp; Android）智能手机平台都以提供了对NFC大范围的支持，不用担心平台之间的限制<br><img src="/2020/12/16/iOS-CoreNFC/smartPhoneSupport.png" alt="alt"></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/12/16/iOS-CoreNFC/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -989,7 +681,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-31 15:53:44" itemprop="dateModified" datetime="2020-12-31T15:53:44+08:00">2020-12-31</time>
+                <time title="Modified: 2021-01-26 08:58:21" itemprop="dateModified" datetime="2021-01-26T08:58:21+08:00">2021-01-26</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1007,7 +699,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>2.6k</span>
+              <span>2.7k</span>
             </span>
             <span class="post-meta-item" title="Reading time">
               <span class="post-meta-item-icon">
@@ -1026,32 +718,106 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="一、环境信息"><a href="#一、环境信息" class="headerlink" title="一、环境信息"></a>一、环境信息</h4><ol>
-<li><p>系统 ruby版本： </p>
-<pre><code> ruby --version
- ruby 2.6.3p62 (2019-04-16 revision 67580) [universal.x86_64-darwin19]</code></pre>
-</li>
-<li><p>Mac的系统版本</p>
-<pre><code> macOS Catalina  10.15.5</code></pre>
-</li>
-<li><p>安装 rvm工具</p>
-<pre><code> 1. curl -sSL https://get.rvm.io | bash -s stable
- 2. rvm 安装完毕信息如下：
-     Ruby enVironment Manager 1.29.10 (latest) (c) 2009-2017 Michal Papis, Piotr Kuczynski, Wayne E. Seguin
-     For additional documentation please visit https://rvm.io</code></pre>
-</li>
-<li><p>通过 rvm 安装ruby</p>
-<pre><code> rvm install &quot;ruby-2.7.2&quot;</code></pre>
-</li>
-<li><p>设置ruby 2.7.2 版本的ruby 为默认的ruby</p>
-<pre><code> rvm 2.7.2 -- current &amp;&amp; default</code></pre>
-</li>
-<li><p>安装ruby的调试工具RubyMine-2020.3（30天试用期）</p>
-</li>
-</ol>
+          <h4 id="一、背景"><a href="#一、背景" class="headerlink" title="一、背景"></a>一、背景</h4><p> 虽然很早就接触到了ruby，但是以前的调试都是通过ruby的puts输出来调试ruby代码。puts输出的方式很难满足最近由于工作需要，因此希望能够通过断点的方式来调试ruby代码。虽然Google到一些RubyMine配置的文章，但是在配置过程中还是碰到一些问题，把这些坑记下来，希望能够方便遇到类似问题的后者。</p>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2020/12/11/cocoapods-rubyMine/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/04/16/iOS-CoreNFC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lhs728">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lhs7248的博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/04/16/iOS-CoreNFC/" class="post-title-link" itemprop="url">iOS-CoreNFC</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-04-16 17:50:59" itemprop="dateCreated datePublished" datetime="2020-04-16T17:50:59+08:00">2020-04-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-25 17:26:37" itemprop="dateModified" datetime="2021-01-25T17:26:37+08:00">2021-01-25</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/NFC/" itemprop="url" rel="index"><span itemprop="name">NFC</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>3 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h4 id="一、简介"><a href="#一、简介" class="headerlink" title="一、简介"></a>一、简介</h4><p>最近在公司做平安小程序运行框架的开发，目前在做和微信小程序API对齐的工作，在对其的小程序API中包含NFC相关的内容，因此记录下来留着回忆。</p>
+<p>本文是关于iOS13 NFC技术的相关学习及探索。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/04/16/iOS-CoreNFC/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -1106,7 +872,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-13 16:58:53" itemprop="dateModified" datetime="2021-01-13T16:58:53+08:00">2021-01-13</time>
+                <time title="Modified: 2021-01-26 09:09:05" itemprop="dateModified" datetime="2021-01-26T09:09:05+08:00">2021-01-26</time>
               </span>
 
           <br>
@@ -1161,7 +927,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/05/22/ios-Setting/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/07/18/ios-mobileprovision/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1175,7 +941,7 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/05/22/ios-Setting/" class="post-title-link" itemprop="url">iOS_Setting</a>
+            <a href="/2019/07/18/ios-mobileprovision/" class="post-title-link" itemprop="url">如何编写iOS的通用构建脚本？</a>
         </h2>
 
         <div class="post-meta">
@@ -1185,14 +951,14 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2018-05-22 15:47:15" itemprop="dateCreated datePublished" datetime="2018-05-22T15:47:15+08:00">2018-05-22</time>
+              <time title="Created: 2019-07-18 18:17:50" itemprop="dateCreated datePublished" datetime="2019-07-18T18:17:50+08:00">2019-07-18</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-31 15:55:10" itemprop="dateModified" datetime="2020-12-31T15:55:10+08:00">2020-12-31</time>
+                <time title="Modified: 2021-01-26 09:00:55" itemprop="dateModified" datetime="2021-01-26T09:00:55+08:00">2021-01-26</time>
               </span>
 
           <br>
@@ -1201,14 +967,14 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
                 <i class="far fa-file-word"></i>
               </span>
                 <span class="post-meta-item-text">Symbols count in article: </span>
-              <span>1.1k</span>
+              <span>2.1k</span>
             </span>
             <span class="post-meta-item" title="Reading time">
               <span class="post-meta-item-icon">
                 <i class="far fa-clock"></i>
               </span>
                 <span class="post-meta-item-text">Reading time &asymp;</span>
-              <span>1 mins.</span>
+              <span>2 mins.</span>
             </span>
 
         </div>
@@ -1220,29 +986,10 @@ pod &#39;QueryKit&#39;, :subspecs =&gt; [&#39;Attribute&#39;, &#39;QuerySet&#39;
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><a target="_blank" rel="noopener" href="https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/UserDefaults/Preferences/Preferences.html">setting 的配置</a></p>
-<p><a target="_blank" rel="noopener" href="https://github.com/lhs7248/ios_setting">ios_setting_Demo</a></p>
-<h4 id="01、概念"><a href="#01、概念" class="headerlink" title="01、概念"></a>01、概念</h4><pre><code>setting是可以在外部的设置或者app 内部设置一些东西供用户进行选着（test）</code></pre>
-<h4 id="02、创建方法"><a href="#02、创建方法" class="headerlink" title="02、创建方法"></a>02、创建方法</h4><pre><code>To add a Settings bundle to your Xcode project:
-Choose File &gt; New &gt; New File.
-Under iOS, choose Resource, and then select the Settings Bundle template.
-Name the file Settings.bundle.</code></pre>
-<h4 id="03、Root-plist-的相关属性"><a href="#03、Root-plist-的相关属性" class="headerlink" title="03、Root.plist 的相关属性"></a>03、Root.plist 的相关属性</h4><pre><code>Text field  可以进行编辑的文本框
-
-Title  一个只读的描述信息
-
-Toggle switch  switch on/off
-
-Slider 滑动条
-
-Multivalue 各种类型让用户进行选择
-
-Group  一组可选项
-
-Child pane   The child pane type lets the user navigate to a new page of preferences</code></pre>
+          <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>最近在负责平安银行内部的MCD项目开发，目标是为银行体系内部提供持续化的集成发布平台，为移动端及H5端的提供构建、发布等相关功能。</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/05/22/ios-Setting/#more" rel="contents">
+              <a class="btn" href="/2019/07/18/ios-mobileprovision/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
@@ -1264,6 +1011,9 @@ Child pane   The child pane type lets the user navigate to a new page of prefere
 
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+  </nav>
 
 
 
@@ -1328,7 +1078,7 @@ Child pane   The child pane type lets the user navigate to a new page of prefere
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -1341,7 +1091,7 @@ Child pane   The child pane type lets the user navigate to a new page of prefere
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-count">7</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -1385,12 +1135,12 @@ Child pane   The child pane type lets the user navigate to a new page of prefere
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="Symbols count total">22k</span>
+    <span title="Symbols count total">25k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="Reading time total">20 mins.</span>
+    <span title="Reading time total">23 mins.</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
   </div>
