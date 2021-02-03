@@ -20,15 +20,19 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="lhs7248的博客">
-<meta property="og:url" content="http://example.com/archives/2020/12/index.html">
+  <meta name="description" content="简介本文主要记录一下在工作中经常使用的git命令。 Git    初始化git init 常用来初始化git 仓库">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 常用的命令行">
+<meta property="og:url" content="http://example.com/2018/04/13/gitCommand/index.html">
 <meta property="og:site_name" content="lhs7248的博客">
+<meta property="og:description" content="简介本文主要记录一下在工作中经常使用的git命令。 Git    初始化git init 常用来初始化git 仓库">
 <meta property="og:locale">
+<meta property="article:published_time" content="2018-04-13T07:57:11.000Z">
+<meta property="article:modified_time" content="2021-02-03T02:34:55.211Z">
 <meta property="article:author" content="lhs728">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://example.com/archives/2020/12/">
+<link rel="canonical" href="http://example.com/2018/04/13/gitCommand/">
 
 
 <script id="page-configurations">
@@ -36,12 +40,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-Hans'
   };
 </script>
 
-  <title>Archive | lhs7248的博客</title>
+  <title>Git 常用的命令行 | lhs7248的博客</title>
   
 
 
@@ -166,50 +170,146 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">Um..! 8 posts in total. Keep on posting.</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/04/13/gitCommand/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lhs728">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lhs7248的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Git 常用的命令行
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-04-13 15:57:11" itemprop="dateCreated datePublished" datetime="2018-04-13T15:57:11+08:00">2018-04-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-02-03 10:34:55" itemprop="dateModified" datetime="2021-02-03T10:34:55+08:00">2021-02-03</time>
+              </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>1k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>1 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2020</span>
+        <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>本文主要记录一下在工作中经常使用的git命令。</p>
+<h4 id="Git-初始化"><a href="#Git-初始化" class="headerlink" title="Git    初始化"></a>Git    初始化</h4><pre><code>git init 常用来初始化git 仓库</code></pre>
+<a id="more"></a>
+
+<h4 id="git-提交命令"><a href="#git-提交命令" class="headerlink" title="git 提交命令"></a>git 提交命令</h4><pre><code>git add 用来添加修改的变化
+
+git add . 是用来添加所有的修改变化
+
+git commit 是用来提交到本地仓库
+
+git commit -a -m&quot;描述信息&quot;</code></pre>
+<h4 id="git-pull-远端的仓库"><a href="#git-pull-远端的仓库" class="headerlink" title="git pull 远端的仓库"></a>git pull 远端的仓库</h4><pre><code>git pull 拉取远端的仓库
+
+当在使用pull的时候会发生冲突，如果是iOS开发建议使用Xcode来解决冲突,(冲突主要是集中在&lt;&lt;&lt;&lt; 在这中间&gt;&gt;&gt;)
+
+git pull -p 强制更新本地大分支相关</code></pre>
+<h4 id="git-push-到远端的仓库"><a href="#git-push-到远端的仓库" class="headerlink" title="git push 到远端的仓库"></a>git push 到远端的仓库</h4><pre><code>git push  
+
+git push origin HEAD:refs/for/CarKeyUserDev</code></pre>
+<h4 id="git-tag"><a href="#git-tag" class="headerlink" title="git tag"></a>git tag</h4><pre><code>git tag -l 查看所有的tag
+
+git tag -v +tag的标签内容
+
+git checkout tag-name 根据tag的name拉取相应tag位置的代码
+
+git tag -a 版本号 -m &#39;版本描述&#39;
+
+git push -a tags 将所有的tag push到远端</code></pre>
+<h4 id="git-branch"><a href="#git-branch" class="headerlink" title="git branch"></a>git branch</h4><pre><code>git branch -a 查看所有的branch
+
+git checkout branchName  切换分支
+
+git branch -D branchName 删除相应的分支
+
+git checkout -b branchName 新建新的分支</code></pre>
+<h4 id="git-cherry－pick"><a href="#git-cherry－pick" class="headerlink" title="git cherry－pick"></a>git cherry－pick</h4><pre><code>cherry-pick 命令“复制”一个提交节点并在当前分支做一次完全一样的新提交。</code></pre>
+<h4 id="git-rebase"><a href="#git-rebase" class="headerlink" title="git rebase"></a>git rebase</h4><pre><code>衍合是合并命令的另一种选择。合并把两个父分支合并进行一次提交，提交历史不是线性的。衍合在当前分支上重演另一个分支的历史，提交历史是线性的。本质上，这是线性化的自动的 cherry-pick。</code></pre>
+<h4 id="git-reflog"><a href="#git-reflog" class="headerlink" title="git reflog"></a>git reflog</h4><pre><code>git reflog 引用日志
+
+find .git/objects -type f | xargs ls -lt | sed 30q 查看最近git add 的操作</code></pre>
+<h4 id="git-fsck-–full"><a href="#git-fsck-–full" class="headerlink" title="git fsck –full"></a>git fsck –full</h4><pre><code>查找本地删除掉的commitid
+每次的commit都会在git文件夹中，就算删除掉的</code></pre>
+<h4 id="delete-Branch-amp-tag"><a href="#delete-Branch-amp-tag" class="headerlink" title="delete Branch &amp; tag"></a>delete Branch &amp; tag</h4><pre><code>删除分支    
+$ git push origin --delete &lt;branchName&gt;
+删除tag
+git push origin --delete tag &lt;tagname&gt;</code></pre>
+<h4 id="配置git的代理"><a href="#配置git的代理" class="headerlink" title="配置git的代理"></a>配置git的代理</h4><pre><code>[http]
+        proxy = socks5://127.0.0.1:1086
+ [https]
+        proxy = socks5://127.0.0.1:1086</code></pre>
+
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+    
+    
+    
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-12-11T15:14:45+08:00"
-              content="2020-12-11">
-          12-11
-        </time>
-      </div>
+      <footer class="post-footer">
 
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/12/11/cocoapods-rubyMine/" itemprop="url">
-            <span itemprop="name">关于如何使用rubyMine调试cocoapods插件</span>
-          </a>
-      </div>
+        
 
-    </header>
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2018/05/22/ios-Setting/" rel="next" title="iOS_Setting">
+      iOS_Setting <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
   </article>
-
-
-    </div>
-  </div>
   
   
-  
-
   
 
 
@@ -262,6 +362,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Git-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">Git    初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-%E6%8F%90%E4%BA%A4%E5%91%BD%E4%BB%A4"><span class="nav-number">3.</span> <span class="nav-text">git 提交命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-pull-%E8%BF%9C%E7%AB%AF%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">4.</span> <span class="nav-text">git pull 远端的仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-push-%E5%88%B0%E8%BF%9C%E7%AB%AF%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">5.</span> <span class="nav-text">git push 到远端的仓库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-tag"><span class="nav-number">6.</span> <span class="nav-text">git tag</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-branch"><span class="nav-number">7.</span> <span class="nav-text">git branch</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-cherry%EF%BC%8Dpick"><span class="nav-number">8.</span> <span class="nav-text">git cherry－pick</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-rebase"><span class="nav-number">9.</span> <span class="nav-text">git rebase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-reflog"><span class="nav-number">10.</span> <span class="nav-text">git reflog</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#git-fsck-%E2%80%93full"><span class="nav-number">11.</span> <span class="nav-text">git fsck –full</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delete-Branch-amp-tag"><span class="nav-number">12.</span> <span class="nav-text">delete Branch &amp; tag</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEgit%E7%9A%84%E4%BB%A3%E7%90%86"><span class="nav-number">13.</span> <span class="nav-text">配置git的代理</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
