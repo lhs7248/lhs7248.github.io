@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="简介原文链接：Threading Programming Guide 线程是使单个应用并发执行代码的技术之一。尽管有 operation和GCD 这样较新的技术为实现并发提供了更现代、更有效的基础设施，OS X 和 iOS 依然提供了创建和管理线程的接口。 本文介绍 OS X 中可用的线程程序包，以及如何使用它们。本文也介绍线程同步及多线程编程的相关技术。  注意: 如果你在开发一个新应用，我们鼓">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Threading Programming Guide 翻译">
+<meta property="og:url" content="http://example.com/2018/03/20/Threading-Programming-Guide/index.html">
+<meta property="og:site_name" content="lhs7248的博客">
+<meta property="og:description" content="简介原文链接：Threading Programming Guide 线程是使单个应用并发执行代码的技术之一。尽管有 operation和GCD 这样较新的技术为实现并发提供了更现代、更有效的基础设施，OS X 和 iOS 依然提供了创建和管理线程的接口。 本文介绍 OS X 中可用的线程程序包，以及如何使用它们。本文也介绍线程同步及多线程编程的相关技术。  注意: 如果你在开发一个新应用，我们鼓">
+<meta property="og:locale">
+<meta property="og:image" content="http://example.com/2018/03/20/Threading-Programming-Guide/runloop.jpg">
+<meta property="og:image" content="http://example.com/2018/03/20/Threading-Programming-Guide/custom-input-source.jpg">
+<meta property="article:published_time" content="2018-03-20T07:12:24.000Z">
+<meta property="article:modified_time" content="2021-02-20T08:17:19.440Z">
+<meta property="article:author" content="lhs728">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2018/03/20/Threading-Programming-Guide/runloop.jpg">
+
+<link rel="canonical" href="http://example.com/2018/03/20/Threading-Programming-Guide/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Threading Programming Guide 翻译 | lhs7248的博客</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?2c28b34ebf94902f8372b65ff331f6e1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">lhs7248的博客</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录一点有意义的事</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/lhs7248" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/03/20/Threading-Programming-Guide/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="lhs728">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="lhs7248的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Threading Programming Guide 翻译
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-03-20 15:12:24" itemprop="dateCreated datePublished" datetime="2018-03-20T15:12:24+08:00">2018-03-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-02-20 16:17:19" itemprop="dateModified" datetime="2021-02-20T16:17:19+08:00">2021-02-20</time>
+              </span>
+
+          <br>
+            <span class="post-meta-item" title="Symbols count in article">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">Symbols count in article: </span>
+              <span>65k</span>
+            </span>
+            <span class="post-meta-item" title="Reading time">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">Reading time &asymp;</span>
+              <span>59 mins.</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>原文链接：<br><a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/Introduction/Introduction.html">Threading Programming Guide</a></p>
+<p>线程是使单个应用并发执行代码的技术之一。尽管有 operation和GCD 这样较新的技术为实现并发提供了更现代、更有效的基础设施，OS X 和 iOS 依然提供了创建和管理线程的接口。</p>
+<p>本文介绍 OS X 中可用的线程程序包，以及如何使用它们。本文也介绍线程同步及多线程编程的相关技术。</p>
+<blockquote>
+<p><strong>注意</strong>: 如果你在开发一个新应用，我们鼓励你去调研一下可供 OS X 实现并发的备选技术。如果你还不熟悉实现线程应用所需的设计技术的话，这尤其正确。这些替代技术简化了实现并发执行所需的工作量，并提供了比传统线程调用方式更好的性能。关于这些技术，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40008091">《Concurrency Programming Guide》</a></p>
+</blockquote>
+<h2 id="关于多线程编程"><a href="#关于多线程编程" class="headerlink" title="关于多线程编程"></a>关于多线程编程</h2><p>多年来，计算机的最大性能在很大程度上受到计算机核心的单个微处理器速度的限制。随着单个处理器的速度濒临实际极限，芯片制造商转向多核设计，使计算机有机会同时处理多个任务。OS X 在执行系统相关任务时利用了这些核心，你的应用同样也可以通过线程利用他们</p>
+<h2 id="什么是线程？"><a href="#什么是线程？" class="headerlink" title="什么是线程？"></a>什么是线程？</h2><p>线程是应用中实现多路执行的轻量级方法。系统级程序并发执行，根据当前程序和其他程序的需要去分配执行时间。在每个程序内部都存在一个或更多执行线程，这些线程同时或几乎同时被用于执行不同的任务。系统将执行线程调度到可用的核心上运行，并根据需要预先中断它们，以允许其他线程运行。</p>
+<p>从技术角度看，线程是管理代码执行所需的内核级与应用级数据结构的组合。内核结构协调线程的事件派发及在可用内核上抢占调度。应用级结构包括了存储函数调用栈，管理和操作线程的状态属性。</p>
+<p>在一个非并发应用中，只有一个执行线程。该线程以应用主例程开始和结束，并逐个分支到不同的函数方法来实现应用的总体行为。相反，支持并发的应用从一个线程开始，并根据需要添加更多线程以实现多路执行。每个新路径都有自己的自定义启动例程，它独立于应用程序主例程代码。多线程应用提供非常重要的两个潜在优势：</p>
+<ul>
+<li>多线程可以提升应用程序的感知和响应能力</li>
+<li>多线程可以提升应用程序在多核系统中的实时性能</li>
+</ul>
+<p>如果应用只有一个线程，这个线程必须做每一件事。它必须响应事件，更新应用窗口，执行应用行为所需的计算。问题在于，一个线程同时只能做一件事。那么一个耗时计算发生时，会发生什么？当代码忙于计算时，应用会停止响应用户事件及更新窗口。如果耗时行为足够长，用户可能会认为你的应用挂起，然后试图强退。如果你将自定义计算转移到独立线程中，应用的主线程则可以更及时地响应用户交互。</p>
+<p>随着多核计算机的普及，线程在某类应用中提供了一种提高性能的方式。执行不同任务的线程可以在不同处理器内核上同时执行这些任务，从而使应用能够在给定时间内增加工作量。</p>
+<p>当然，线程并不是解决应用性能问题的银弹。线程带来好处的同时也带来了潜在问题。应用的多路执行会给代码增加相当多的复杂性。每个线程必须与其他线程协调，以避免对应用的状态信息造成破坏。因为单应用中的线程共享相同的内存空间，所以他们可以访问所有相同的数据结构。如果两个线程试图在同一时间操作相同的数据，一个线程可能覆写另一线程的更改，最终破坏了该数据的正确结果。即使有了适当保护，你依然要小心编译器优化导致你的代码引入微妙Bug</p>
+<h2 id="线程的术语"><a href="#线程的术语" class="headerlink" title="线程的术语"></a>线程的术语</h2><p>在深入讨论线程机器支持技术之前，有必要定义一些基本术语。</p>
+<p>如果你熟悉 UNIX 系统，你可能会发现本文的术语 task 与之有所不同。在 UNIX 系统中，术语 task 有时指正在运行的进程。</p>
+<p>本文档采用下列术语：</p>
+<ul>
+<li><code>thread</code>: 线程，用于表示代码的单独执行路径</li>
+<li><code>process</code>: 进程，指正在运行的可执行文件，它可以包含多个线程</li>
+<li><code>task</code>: 任务，指需要执行的工作的抽象概念</li>
+</ul>
+<h2 id="线程的替代品"><a href="#线程的替代品" class="headerlink" title="线程的替代品"></a>线程的替代品</h2><p>创建线程的一个问题是给代码增加了不确定性。线程是应用中支持并发的一种相对低级和复杂的方法。如果你没有完全理解设计选项的含义，你可能很容易遭遇同步问题，严重时，微小的行为修改可能导致应用崩溃及用户数据的损坏。</p>
+<p>另一个需要考虑的因素是你是否需要线程并发。线程解决了如何在同个进程中并发执行的问题。但在某些情况下，你所做的工作可能并不需要。线程会给进程带来大量的开销，包括消耗内存和 CPU 时间。你可能发现这个开销对于预期任务来说太大了，或者其他选项更容易实现。</p>
+<p>Table 1-1 列出了线程的一些替代方案。此表包括线程的替代技术（如操作对象和 GCD），以及旨在有效调用现有单线程的替代技术</p>
+<p>Table 1-1 线程的替代技术</p>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Operation objects</td>
+<td>在 OS X 10.5 中引入，操作对象通常是辅助线程上执行的任务包装器。这个包装隐藏了执行任务的线程管理，使你可以专注于任务本身。Operation 通常和操作队列一起使用，操作队列管理 Operation 在一个或多个线程上执行。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/Introduction/Introduction.html">《Concurrency Programming Guide》</a>。</td>
+</tr>
+<tr>
+<td>Grand Central Dispatch (GCD)</td>
+<td>在 Mac OS X v10.6 中引入，是线程的另一种选择，它允许你专注于需要执行的任务中而非线程管理。使用 GCD，你可以定义要执行的任务，并将其添加到一个工作队列中，该队列在适当的线程中进行任务调度。工作队列考虑可用内核的数量和当前负载，从而比使用线程更有效地执行任务。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/Introduction/Introduction.html">《Concurrency Programming Guide》</a></td>
+</tr>
+<tr>
+<td>Idle-time notifications</td>
+<td>对于相对较短且优先级很低的任务，空闲时间通知允许你在应用程序不那么忙的时间执行任务。Cocoa 使用 NSNotificationQueue 对象提供对空闲时间通知的支持。要请求空闲时通知，可使用 NSPostWhenIdle 选项在默认的 NSNotificationQueue 对象中发送通知。队列延迟传递通知对象，直到 RunLoop 变为空闲。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Notifications/Introduction/introNotifications.html">《Notification Programming Topics》</a>。</td>
+</tr>
+<tr>
+<td>Asynchronous functions</td>
+<td>系统接口包括许多为你提供自动并发性的异步函数。这些 API 可以使用系统后台程序和进程，或创建自定义线程来执行任务并将结果返回。（实际实现无关紧要，因为它和你的代码是分开的）在设计应用时，可寻找提供异步行为的函数，并考虑使用它们，而不是在自定义线程上使用等效的同步函数。</td>
+</tr>
+<tr>
+<td>Timers</td>
+<td>你可以在应用主线程上使用定时器执行周期性任务，这些任务非常简单，不需要线程，但仍然需要定期进行维护。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW21">《Timer Sources》</a>。</td>
+</tr>
+<tr>
+<td>Separate processes</td>
+<td>虽然进程比线程更重量级，但在任务与应用无关的情况下，创建独立的进程可能会很有用。如果任务需要大量内存或必须使用根权限执行，则可以使用进程。例如，在 32 位应用像用户显示结果时，可以使用 64 位的服务进程计算大量数据。</td>
+</tr>
+</tbody></table>
+<p> <strong>警告</strong>: 当通过 <code>fork</code> 启动一个新进程的时候，你必须要接着调用一个 <code>exec</code> 或相似的函数。依赖于 Core Founadtion 的应用，Cocoa，或 Core Data 框架必须调用 <code>exec</code> 函数，否则这些框架可能不能正确的工作。</p>
+<h2 id="线程支持"><a href="#线程支持" class="headerlink" title="线程支持"></a>线程支持</h2><p>如果你有线程的代码使用线程，OS X 和 iOS 提供了在应用中创建线程的一些技术。另外，两个系统都提供了管理和同步线程所需工作的支持。下面的部分描述了一些在 OS X 和 iOS 中是使用线程时你所需要知道的关键技术。</p>
+<h3 id="Threading-Packages"><a href="#Threading-Packages" class="headerlink" title="Threading Packages"></a>Threading Packages</h3><p>尽管线程的底层实现机制是 Mach 线程，但你很少需要在 Mach 级别上使用。而你通常可以使用更方便的 POSIX API 或它的一个衍生品。然而 Mach 实现确实提供了所有线程的基本特性，包括抢占执行模型和调度线程的能力，这样它们就彼此独立了</p>
+<p>下表列出了你可以使用的线程技术:</p>
+<table>
+<thead>
+<tr>
+<th>Technology</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cocoa threads</td>
+<td>Cocoa 使用 NSThread 类实现线程。Cocoa 还提供了在 NSObject 上的方法用于生成新线程并在已经运行的线程上执行代码。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW11">《Using NSThread》</a>、<a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW13">《Using NSObject to Spawn a Thread》</a>。</td>
+</tr>
+<tr>
+<td>POSIX threads</td>
+<td>POSIX 提供了基于 C 的接口来创建线程。如果你不是在写 Cocoa 应用，这是创建线程的最好选择。POSIX 接口相对而言使用简单并且提供了配置线程的充足灵活性。</td>
+</tr>
+<tr>
+<td>Multiprocessing Services</td>
+<td>Multiprocessing Services 是一个历史遗留的基于 C 的接口，被用于从老的 Mac OS 迁移过来的应用。这项技术只在 OS X 中可用，在新的开发中应该尽量避免。相反，你应该使用 <code>NSThread</code> 类或 POSIX 线程。</td>
+</tr>
+</tbody></table>
+<p>在应用级别，所有线程的行为本质上与其他平台相同。启动线程后，线程以三种主要状态之一运行：running, ready, or blocked。如果线程当前没有运行，它要么阻塞并等待输入，要么已经准备好运行但还未被调度。线程继续在这些状态中来回切换，知道最后退出并切换到终止状态。</p>
+<p>创建新线程时，必须为该线程指定入口函数（对于 Cocoa 线程，则为入口方法）。这个入口函数构成了你希望在线程上执行的代码。当函数返回时，或者当你显式地终止线程时，线程将永久停止并由系统回收。由于线程在内存和时间方面的创建成本相对较高，因此建议入口函数执行大量工作，或设置一个 RunLoop 以允许执行重复的工作。</p>
+<h3 id="Run-Loops"><a href="#Run-Loops" class="headerlink" title="Run Loops"></a>Run Loops</h3><p>RunLoop 是管理线程上异步到达事件的基础设施。RunLoop 通过监视线程一个或多个事件源来工作。事件到达时，系统唤醒线程并派发事件到 RunLoop，然后 RunLoop 将事件分配到你指定的处理程序中。如果准备处理的事件出现，RunLoop 将使线程休眠。</p>
+<p>你不必对创建的任何线程使用 RunLoop，但这样做可以为用户提供更好的体验。RunLoop 让使用最少资源创建持久线程成为可能。由于 RunLoop 无任务时会让线程处于休眠状态，因此它消除了轮询的需要，轮询会浪费 CPU 周期并阻止处理器本身休眠和节省电能。</p>
+<p>配置 RunLoop，你只需要启动线程并获取对 RunLoop 对象的引用，安装你的事件处理程序，并使 RunLoop 运行。这个 OS X 提供的基础设施自动为你处理了主线程 RunLoop 的配置。但是，如果你计划创建持久的辅助线程，你必须自己为这个线程配置 RunLoop。</p>
+<p>更多关于 RunLoop 的细节和样例，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1">《Run Loops》</a>。</p>
+<h3 id="同步工具"><a href="#同步工具" class="headerlink" title="同步工具"></a>同步工具</h3><p>线程编程的危险之一是多线程之间的资源竞争。如果多个线程试图同时使用或修改相同资源，可能就会出现问题。缓解这个问题的一种方法是完全消除共享资源，并确保每个线程都有自己要操作的一组不同资源。但是，如果不能维护完全独立的资源，则可能必须用锁、条件、原子操作和其他技术来同步对资源的访问。</p>
+<p>锁为同一时间只能由一个线程执行的代码提供了强力保护。最常见的锁是互斥锁。当一个线程试图获取另一个线程持有的互斥锁时，它会阻塞，直到另一个线程释放锁为止。一些系统框架提供了对互斥锁的支持，尽管他们都基于相同的底层技术。此外，Cocoa 还提供了互斥锁的几个变体来支持不同类型的行为，比如递归。有关锁类型的更多信息，请参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-126320">《Locks》</a>。</p>
+<p>除了锁之外，系统还提供了对条件的支持，这些条件确保应用中的任务顺序正确。一个条件作为一个看门人，阻塞一个给定线程，直到它所代表的条件变为真。当这种情况发生时，条件释放线程并允许它继续。POSIX 层和 Foundation 框架都为条件提供了直接支持。（如果你使用 Operation，你可以配置 Operation 对象之间的依赖关系，以保证任务的执行顺序，这与条件提供的行为非常类似。）</p>
+<p>锁和条件在并发设计中非常常见，原子操作则是保护同步访问数据的另一种方式。在可以对标量数据执行数学或逻辑操作的情况下，原子操作提供了一种轻量级的锁替代方法。原子操作使用特殊的硬件指令，以保证其他线程有机会访问变量之前完成对变量的修改。</p>
+<p>关于同步工具，更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-124887">《Synchronization Tools》</a>。</p>
+<h3 id="线程间通讯"><a href="#线程间通讯" class="headerlink" title="线程间通讯"></a>线程间通讯</h3><p>虽然一个好的设计可以最小化所需的通信量，但某些时候，线程之间的通信是必要的。（线程为应用执行工作，但如果该工作结果从未使用过，那么它有什么意义呢？）线程可能需要处理新的作业请求，或者将它们的进度报告给应用主线程。在这些情况下，你需要一种将信息从一个线程获取到另一个线程的方法。幸运的是，线程共享相同的进程空间，这意味着你有很多通信选项。</p>
+<p>线程间通信有很多种方式，它们各有优劣。Configuring Thread-Local Storage 列出了在 OS X 中最常见的通信机制。（除消息队列和 Cocoa 分布式对象外，这些技术在 iOS 中也可以用。）表中列出的技术是按照复杂性递增排序的。</p>
+<p>通信机制：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Direct messaging    Cocoa</td>
+<td>应用程序支持在其他线程上直接执行选择器。这个功能意味着一个线程实际上可以在任何其他线程上执行一个方法。因为他们是在目标线程的上下文中执行的，所以这种方式发送的消息会在该线程上自动序列化。更多关于输入源的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW44">《Cocoa Perform Selector Sources》</a>。</td>
+</tr>
+<tr>
+<td>Global variables, shared memory, and objects</td>
+<td>在两个线程之间通信另一种简单的方法是使用全局变量、共享对象或共享内存块。尽管共享变量快速且简单，但他们也比直接传递消息更脆弱。共享变量必须小心地用锁或其他同步机制进行保护，以确保代码的安全性。如果不这样做，可能会导致静态条件，损坏数据或崩溃。</td>
+</tr>
+<tr>
+<td>Conditions</td>
+<td>条件是一个同步工具，你可以使用它来控制线程何时执行代码的特定部分。你可以将条件视为看门人，只在满足指定条件的时候让线程运行。有关如何使用条件，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-SW4">《Using Conditions》</a>。</td>
+</tr>
+<tr>
+<td>Run loop sources</td>
+<td>自定义 RunLoop source 是为线程上接收特定于应用的消息而设定的。因为它们是事件驱动，RunLoop sources 在无视可做时自动让线程休眠，从而提高了线程的效率。有关 RunLoop 和 RunLoop sources，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1">《Run Loops》</a>。</td>
+</tr>
+<tr>
+<td>Ports and sockets</td>
+<td>基于端口的通信是两线程间通信的一种更复杂的方式，但它也是一种非常可靠的技术。更重要的是，端口和套接字可用于与外部实体通信，如其他进程和服务。为了提高效率，端口是使用 RunLoop sources 去实现的，因此当端口上没有等待的数据时，线程处于休眠状态。有关 RunLoop 和基于端口的输入源信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1">《Run Loops》</a>。</td>
+</tr>
+<tr>
+<td>Message queues</td>
+<td>遗留的多进程服务定义了先进先出（FIFO）队列抽象，用于管理传入和传出数据。尽管消息队列简单方便，但他们不如其他一些通信技术有效。有关如何使用消息队列的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Carbon/Conceptual/Multitasking_MultiproServ/01introduction/introduction.html#//apple_ref/doc/uid/TP40000853">《Multiprocessing Services Programming Guide》</a>。</td>
+</tr>
+<tr>
+<td>Cocoa distributed objects</td>
+<td>分布式对象是一种 Cocoa 技术，它提供了基于端口通信的高级实现。尽管可以将此技术用于线程间通信，但由于它会带来大量开销，因此非常不鼓励这么做。分布式对象更适合与其他进程通信，因为这些进程之间进行通信的开销已经非常高了。更多信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/DistrObjects/DistrObjects.html#//apple_ref/doc/uid/10000102i">《Distributed Objects Programming Topics》</a>。</td>
+</tr>
+</tbody></table>
+<h2 id="Design-Tips"><a href="#Design-Tips" class="headerlink" title="Design Tips"></a>Design Tips</h2><p>以下部分提供指导原则，帮助你以确保代码正确性的方式实现线程。其中一些指导原则还提供了帮助你使用自己线程代码获取更高性能的技巧。与任何性能提示一样，你应该总在更改代码前，期间和之后手机相关的性能统计信息。</p>
+<h3 id="避免显式的创建线程"><a href="#避免显式的创建线程" class="headerlink" title="避免显式的创建线程"></a>避免显式的创建线程</h3><p>手动编写线程创建代码非常繁琐，而且可能出错，应该尽可能避免这种情况。OS X 和 iOS 通过其他 API 提供了对并发的隐式支持。与其自己手动创建线程，不如考虑使用异步 API，GCD、Operation 对象去完成这个工作。这些技术在幕后为你完成线程相关的工作，并保证正确地完成这些工作。此外，GCD 和 Operation 对象等技术旨在根据当前系统负载调整活动线程的数量，从而比你自己的代码更有效地管理线程。有关 GCD 和 Operation 对象的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40008091">《Concurrency Programming Guide》</a>。</p>
+<h3 id="保持你的线程合理的忙"><a href="#保持你的线程合理的忙" class="headerlink" title="保持你的线程合理的忙"></a>保持你的线程合理的忙</h3><p>如果你决定手动创建和管理线程，请记住线程会消耗宝贵的系统资源。你应该尽力确保分配给线程的任何任务都具有合理的持久时间和高生产力。同时，你不应该害怕终止大部分时间处于空闲状态的线程。线程使用大量的内存，其中一些是连接的，因此释放空闲线程不仅有助于减少应用的内存占用，还可以释放更多的物理内存供其他操作进程使用。</p>
+<blockquote>
+<p><strong>注意</strong>: 在你开始中止线程之前，你总是应该记录你应用的目前性能的一些基本数据。在你尝试你的改变的时候，采取额外的步骤来验证这些改变是否真的提高了性能。</p>
+</blockquote>
+<h3 id="避免共享数据结构"><a href="#避免共享数据结构" class="headerlink" title="避免共享数据结构"></a>避免共享数据结构</h3><p>避免线程相关的资源冲突最简易的办法是为程序中每个线程提供所需数据的副本。当线程之间的通信和资源竞争最小化时，并行代码工作得最好。</p>
+<p>创建多线程应用是困难的。即使你非常小心，并在代码中所有正确的连接处锁定共享数据结构，你的代码在语义上仍不安全。例如，如果你的代码期望按照特定顺序修改共享数据结构，那么它可能会遇到问题。将代码更改为基于事务的模型进行补偿可能会抵消拥有多个线程的性能优势。消除资源竞争通常可使设计更简单，性能更好。</p>
+<h3 id="线程与用户界面"><a href="#线程与用户界面" class="headerlink" title="线程与用户界面"></a>线程与用户界面</h3><p>如果你的应用具有图形用户界面，建议你从应用主线程接受与用户相关的时间并更新界面。这种方法有助于避免与处理用户事件和回执窗口内容相关的同步问题。一些框架，如 Cocoa，通常需要这种行为，但即使对于那些不需要的框架，将这种行为保留在主线程上的好处是简化了管理用户界面的逻辑。</p>
+<p>有几个值得注意的例外情况是，从其他线程执行图形操作是有利的。例如，你可以使用辅助线程来创建和处理图像，并执行其他与图像相关的计算。对这些操作使用辅助线程可以极大地提升性能。如果你不确定某个特定的图形化操作，可以从主线程着手。</p>
+<p>关于 Cocoa 线程安全的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html#//apple_ref/doc/uid/10000057i-CH12-SW1">《Thread Safety Summary》</a>，关于 Cocoa 绘图的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaDrawingGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40003290">《Cocoa Drawing Guide》</a>。</p>
+<h3 id="了解线程在退出时的表现"><a href="#了解线程在退出时的表现" class="headerlink" title="了解线程在退出时的表现"></a>了解线程在退出时的表现</h3><p>进程一直运行到所有非分离线程退出为止。默认情况下，只有应用的主线程被创建为非分离的，但你也可以以这种方式创建其他线程。当用户退出应用时，通常来说合理的做法是立即终止所有分离线程，因为分离线程所在的工作被认为是可选的。但是，如果应用使用后台线程将数据保存到磁盘或执行其他关键工作时，则可能希望这些线程创建为非分离线程，以防止在应用退出时丢失数据。</p>
+<p>创建非分离（也称为可连接）线程需要你进行额外的工作。因为大多数高级线程技术默认情况下不创建可连接线程，所以你可能必须使用 POSIX API 去创建线程。此外，你必须将代码添加到应用的主线程中，以便在非分离线程最终退出时连接。有关可连接线程的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW3">《Setting the Detached State of a Thread》</a>。</p>
+<p>如果你正在编写 Cocoa 应用，你还可以使用 applicationShouldTerminate: 代理方法将应用的终止延迟到稍后的时间，或者完全取消它。当延迟终止时，你的应用需要等待直到每个关键线程完成他们的任务，然后调用 replyToApplicationShouldTerminate: 方法。有关这些方法的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/appkit/nsapplication">《NSApplication Class Reference》</a>。</p>
+<h3 id="处理异常"><a href="#处理异常" class="headerlink" title="处理异常"></a>处理异常</h3><p>异常处理机制依赖于当前调用堆栈，以便在抛出异常时执行任何必要的清理。每个线程都有自己的调用堆栈，因此每个线程负责捕获自己的异常。在辅助线程中捕获异常失败与在主线程中捕获失败是一样的：拥有的进程被终止。你不能将未捕获的异常抛出到另一个线程进行处理。</p>
+<p>如果你需要将当前线程中的异常通知另一个线程（比如主线程），那么你应该捕获异常并向另一线程发送一条消息，指示发生了什么。根据你的模型和你尝试做的事情，捕获异常的线程可以继续处理（如果可能的话），等待指令，或者干脆退出。</p>
+<p><strong>注意</strong>: 在 Cocoa 中，NSException 对象是一个自包含的对象，一旦它被捕获，就可以从一个线程传递给另一个线程。</p>
+<p>在某些情况下，异常处理程序可能会自动被创建。例如，Objective-C 中的 @synchronized 指定包含一个隐式异常处理程序。</p>
+<h3 id="干净的终止你的线程"><a href="#干净的终止你的线程" class="headerlink" title="干净的终止你的线程"></a>干净的终止你的线程</h3><p>线程退出的最佳方式自然是让它到达主入口例程的末尾。虽然有些函数可以立即终止线程，但这些函数只能作为最后的手段使用。在线程到达其自然终点之前终止线程，可能妨碍其之后清理工作的执行。如果线程分配了内存、打开了文件或获取了其他类型的资源，那么代码可能无法回收这些资源，从而导致内存泄露或其他潜在问题。</p>
+<p>合理退出进程的更多信息，参见<a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW10">《Terminating a Thread》</a>。</p>
+<h3 id="Libraries-中的线程安全"><a href="#Libraries-中的线程安全" class="headerlink" title="Libraries 中的线程安全"></a>Libraries 中的线程安全</h3><p>虽然一个应用开发者可以控制应用是否用多线程执行，但库开发者不能。开发库的时候，你必须假定应用调用是多线程或可以在任何时候切换到多线程。因此，你应该始终对代码的关键部分使用锁。</p>
+<p>对库开发者来说，仅在应用成为多线程时创建锁是不明智的。如果你需要在某个时机锁定代码，请在库的使用早期创建锁对象，最好是显式调用初始化库。尽管你也可以使用静态库初始化函数来创建此类锁，但只在没有其他方法时才尝试这么做。初始化函数的执行会增加加载库所需的时间，并可能对性能产生负面影响。</p>
+<p><strong>注意</strong>: 始终记得库中互斥锁的加锁与解锁调用成对。你还应该记住锁定库的数据结构，而不是依赖调用代码来提供线程安全的环境。</p>
+<p>如果你正在开发 Cocoa 库，当你希望在应用变多线程时得到通知，你可以注册 NSWillBecomeMultiThreadedNotification 的观察者。但是，你不应该依赖接收的这个通知，因为它可能在调用库代码之前就已经分发了。</p>
+<hr>
+<h1 id="线程管理"><a href="#线程管理" class="headerlink" title="线程管理"></a>线程管理</h1><p>OOS X 或 iOS 中的每个进程（应用程序）由一个或多个线程组成，每个线程表示应用代码的单一执行路径。每个应用都从一个线程开始，该线程运行应用程序的主函数。应用程序可以派生其他线程，每个线程都执行特定函数的代码。</p>
+<p>当应用产生先一个新的线程时，该线程成为应用进程空间中的一个独立实体。每个线程有它自己的执行栈，并由内核分别调度到运行时。线程可以与其他线程、其他进程进行通信，执行 I/O 操作，以及你需要的其他操作。但是，由于他们在同个进程空间中，单个应用的所有线程共享同样的虚拟内存空间，并具有与进程本身相同的访问权限。</p>
+<p>本章概述了 OS X 和 iOS 中可用的线程技术，以及在应用中使用这些技术的示例。</p>
+<p><strong>注意</strong>: 要了解 Mac OS 线程架构的历史，以及有关线程的其他背景信息，请参见 《Technical Note TN2028, “Threading Architectures”》。</p>
+<h2 id="线程消耗"><a href="#线程消耗" class="headerlink" title="线程消耗"></a>线程消耗</h2><p>线程在内存使用和性能方面对你的程序（和系统）有实际的成本。每个线程都需要在内核内存空间和程序内存空间请求分配内存。管理线程和协调线程调度所需的核心结构在内核中使用 wired 内存。线程的堆栈空间和每个线程的数据存储在程序的内存空间中。这些结构大多数是你第一次创建线程时创建和初始化的 —— 由于需要与内核进行交互，这个过程的开销相对较大。</p>
+<p>Table 2-1 量化了应用中创建用户级线程相关的大约成本。其中一些开销是可配置的，比如辅助线程分配的堆栈空间。创建线程的时间成本是一个粗略的近似值，应该只用于互相之间的相对比较。线程创建时间可以随着处理器负载、计算机速度以及可用系统的程序内存数量而发生很大的变化。</p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>大致开销</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>内核数据结构</td>
+<td>约 1 KB</td>
+<td>此内存用于存储线程数据结构和属性，其中大部分被分配为 wired 内存，因此不能分页到磁盘</td>
+</tr>
+<tr>
+<td>堆栈空间</td>
+<td>512 KB (辅助线程), 8 MB (OS X 主线程), 1 MB (iOS 主线程)</td>
+<td>辅助线程允许的最小堆栈大小是 16 KB，堆栈大小必须是 4 KB 的倍数。该内存的空间在线程创建时被预留在进程空间中，但是该内存关联的实际页直到被需要时才被创建。</td>
+</tr>
+<tr>
+<td>创建耗时</td>
+<td>约 90 ms</td>
+<td>此值反映创建线程的初始调用与线程入口例程开始执行之间的时间。这些数字是通过分析在基于 intel 的 Mac 上创建线程时生成的平均值和中指确定的。</td>
+</tr>
+</tbody></table>
+<p><strong>注意</strong>: 由于底层内核支持，Operation 对象通常可以很快地创建线程。它们不是每次都从头开始创建，而是使用已经驻留在内核中的线程池来节省分配空间。有关使用 Operation 对象的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/General/Conceptual/ConcurrencyProgrammingGuide/Introduction/Introduction.html#//apple_ref/doc/uid/TP40008091">《Concurrency Programming Guide》</a>。</p>
+<p>编写线程代码时要考虑的另一个成本是生产成本。设计线程应用有时需要对组织应用数据结构的方式进行基本更改。为了避免使用同步，可能需要进行这些更改，因为同步本身对设计糟糕的应用造成巨大的性能损失。设计这些数据结构，并在线程代码中调试问题，可能会增加开发线程应用所需的时间。但是，如果线程花费太多时间等待锁或者什么都不做，那么避免这些开销会在运行时带来更大的问题。</p>
+<h2 id="创建线程"><a href="#创建线程" class="headerlink" title="创建线程"></a>创建线程</h2><p>创建低级线程相对简单。在所有情况下，必须有一个函数或方法作为线程的主要入口点，并且必须使用一个可用的线程例程来启动线程。下面几节将展示更常用的线程技术的基本创建过程。使用这些技术创建的线程继承一组默认属性集，默认属性集又你使用的技术决定。更多线程配置信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW8">《Configuring Thread Attributes》</a>。</p>
+<h3 id="使用-NSThread"><a href="#使用-NSThread" class="headerlink" title="使用 NSThread"></a>使用 NSThread</h3><p>使用 NSThread 创建线程有两种方式：</p>
+<ul>
+<li>使用 detachNewThreadSelector:toTarget:withObject: 类方法去生成新线程</li>
+<li>创建一个新的 NSThread 对象并启动（仅 iOS 及 OS X v10.5+ 支持）<br>两种技术都会在应用中创建一个分离线程。分离线程意味着当线程退出时，系统会自动回收线程的资源。这也意味着你的代码以后不必显式地与线程连接。</li>
+</ul>
+<p>由于 OS X 的所有版本都支持 detachNewThreadSelector:toTarget:withObject: 方法，所以在使用线程的现有 Cocoa 应用中经常能找到它。要分离一个新线程，只需要提供用作线程入口点的方法名（selector）、定义该方法的对象以及希望启动时传递给线程的任何数据。下面的示例展示了此方法的基本调用，该调用使用当前对象的自定义方法生成线程。</p>
+<pre><code>[NSThread detachNewThreadSelector:@selector(myThreadMainMethod:) toTarget:self withObject:nil];</code></pre>
+<p>在 OS X v10.5 之前，主要是用 NSThread 类来派生线程。虽然你可以获得 NSThread 对象并访问一些线程属性，但只能在线程运行之后从线程本身进行访问。在 OS X v10.5 中，添加了对创建 NSThread 对象的支持，而无需立即生成相应的新线程。（iOS 也提供这种支持。）这种支持使得在启动线程之前获取和设置各种线程属性成为可能。它还使得以后可以使用该线程对象来引用正在运行的线程。</p>
+<p>在 OS X v10.5 和更高版本中初始化 NSThread 对象的简单方法是使用 initWithTarget:selector:object: 方法。这个方法获取与 detachNewThreadSelector:toTarget:withObject: 方法完全相同的信息，并使用它初始化一个新的 NSThread 实例。但是，它不会启动线程。要启动线程，需要显式调用线程对象的 start 方法，如下面示例所示：</p>
+<pre><code>NSThread* myThread = [[NSThread alloc] initWithTarget:self
+                                        selector:@selector(myThreadMainMethod:)
+                                        object:nil];
+[myThread start];  // Actually create the thread</code></pre>
+<p><strong>注意</strong>: 子类化 NSThread 并覆写 main 方法是 initWithTarget:selector:object: 的另一种选择。你将使用此方法的重写版本来实现线程的主入口点。更多信息查看 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/foundation/nsthread">NSThread Class Reference</a> 的 Subclassing Notes。</p>
+<p>如果你有一个 NSThread 对象，它的线程当前正在运行，你可以向这个线程发送消息的一种方法是使用 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/objectivec/nsobject/1414476-performselector">performSelector:onThread:withObject:waitUntilDone: </a>方法，该方法适用于你的应用程序中几乎所有的对象。OS X v10.5 引入了对在线程（主线程除外）上执行选择器的支持，这是线程之间通信的一种便捷方式。（iOS 也提供这种支持。）使用此技术发送的消息将由另一个线程直接执行，作为其正常 RunLoop 的一部分。（当然，这却是意味着目标线程必须在其 RunLoop 中运行；见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1">Run Loops</a>。）当你以这种方式进行通信时，可能仍然需要某种形式的同步，但这比在线程之间设置通信端口要简单。</p>
+<p><strong>注意</strong>: 尽管使用于线程间的偶尔通信，但对于线程间的时间关键性通信或频繁通信，不应使用 performSelector:onThread:withObject:waitUntilDone: 方法。</p>
+<p>有关其他线程通信选项的列表，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW3">《Setting the Detached State of a Thread》</a>。</p>
+<h3 id="使用-POSIX-线程"><a href="#使用-POSIX-线程" class="headerlink" title="使用 POSIX 线程"></a>使用 POSIX 线程</h3><p>OS X 和 iOS 为使用 POSIX 线程 API 创建线程提供了基于 C 的支持。这种技术实际上可以在任何类型的应用程序使用（包括 Cocoa 和 Cocoa Touch 应用），如果你是为多平台编写软件，那么它可能更方便。你用来创建线程的 POSIX 例程被恰到好处地称为 <code>pthread_create</code>。</p>
+<p>Listing 2-1 展示了使用 POSIX 调用创建线程的两个定制函数。<code>LaunchThread</code> 函数创建一个新线程，该线程的主例程在 <code>PosixThreadMainRoutine</code> 函数中实现。因为 POSIX 默认情况下创建的线程是可连接的，所以本示例更改线程的属性以创建分离的线程。将线程标记为已分离使系统有机会在线程退出时立即返回该线程的资源。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;assert.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;pthread.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span>* PosixThreadMainRoutine(<span class="keyword">void</span>* data) &#123;</span><br><span class="line">  <span class="comment">// Do some work here.</span></span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> LaunchThread() &#123;</span><br><span class="line">  <span class="comment">// Create the thread using POSIX routines.</span></span><br><span class="line">  pthread_attr_t  attr;</span><br><span class="line">  pthread_t       posixThreadID;</span><br><span class="line">  <span class="keyword">int</span>             returnVal;</span><br><span class="line">  </span><br><span class="line">  returnVal = pthread_attr_init(&amp;attr);</span><br><span class="line">  assert(!returnVal);</span><br><span class="line">  returnVal = pthread_attr_setdetachstate(&amp;attr, PTHREAD_CREATE_DETACHED);</span><br><span class="line">  assert(!returnVal);</span><br><span class="line">  <span class="keyword">int</span> threadError = pthread_create(&amp;posixThreadID, &amp;attr, &amp;PosixThreadMainRoutine, <span class="literal">NULL</span>);</span><br><span class="line">  returnVal = pthread_attr_destroy(&amp;attr);</span><br><span class="line">  assert(!returnVal);</span><br><span class="line">  <span class="keyword">if</span> (threadError != <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Report an error.</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>如果将前面清单中的代码添加到源文件中并调用 LaunchThread 函数，它将在应用程序中创建一个新的分离线程。当然，使用此代码创建的新线程不会做任何有用的事情。线程将启动并几乎立即退出。为了是事情更有趣，你需要向 PosixThreadMainRoutine 函数中添加代码来执行一些实际的工作。为了确保线程知道你要做什么，可以在创建时间向它传递一个指向某些数据的指针。将该指针作为 pthread_create 函数的最后一个参数传递。</p>
+<p>要将新创建线程的信息通信回应用的主线程，需要在目标线程之间建立通信路径。对基于 C 的应用，线程之间有几种通信方式，包括端口、条件和共享内存的使用。对于持久存活的线程，几乎总是应该设置某种线程间通信机制，以使应用程序的主线程能够检查线程的状态，或者在应用退出时干净地关闭它。</p>
+<p>更多关于 POSIX 线程函数的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread.3.html#//apple_ref/doc/man/3/pthread">《pthread》</a>。</p>
+<h3 id="使用-NSObject-来生成线程"><a href="#使用-NSObject-来生成线程" class="headerlink" title="使用 NSObject 来生成线程"></a>使用 NSObject 来生成线程</h3><p>在 iOS 和 OS X v10.5 以及更高版本中，所有对象都能够生成一个新线程并使用它执行其中一个方法。<a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/objectivec/nsobject/1412390-performselector">performSelectorInBackground:withObject:</a> 方法创建一个新的分离线程，并使用指定的方法作为新线程的入口点。例如，如果你有一个对象 myObj 并且该对象有一个名为 doSomething 的方法，你希望后台线程中执行该方法，你可以使用一下代码来实现：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[myObj performSelectorInBackground:<span class="keyword">@selector</span>(doSomething) withObject:<span class="literal">nil</span>];</span><br></pre></td></tr></table></figure>
+
+<p>调用此方法的而效果与使用当前对象、选择器和参数对象作为参数调用 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/LegacyTechnologies/WebObjects/WebObjects_3.5/Reference/Frameworks/ObjC/Foundation/Classes/NSThread/Description.html#//apple_ref/occ/cl/NSThread">NSThread</a> 的 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/LegacyTechnologies/WebObjects/WebObjects_3.5/Reference/Frameworks/ObjC/Foundation/Classes/NSThread/Description.html#//apple_ref/occ/clm/NSThread/detachNewThreadSelector:toTarget:withObject:">detachNewThreadSelector:toTarget:withObject:</a> 方法效果相同。新线程使用默认配置立即生成并开始运行。在选择器中，必须像配置任何线程一样配置线程。例如你需要设置一个自动释放池（如果你没有使用垃圾收集），如果你计划使用它，则需要配置线程的 RunLoop。有关如何配置新线程的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW8">《Configuring Thread Attributes》</a></p>
+<h3 id="在-Cocoa-应用中使用-POSIX-线程"><a href="#在-Cocoa-应用中使用-POSIX-线程" class="headerlink" title="在 Cocoa 应用中使用 POSIX 线程"></a>在 Cocoa 应用中使用 POSIX 线程</h3><p>虽然 NSThread 类是 Cocoa 应用中创建线程的主接口，但如果使用 POSIX 线程会更方便的话，你可以自由使用它。例如，如果你已经有使用 POSIX 线程的代码，并且你不想重写它，那么你可能会使用它。如果你确实计划在 Cocoa 应用中使用 POSIX 线程，那么你仍然应该了解 Cocoa 和线程之间的交互，并遵守以下部分的指导原则</p>
+<h4 id="保护-Cocoa-框架"><a href="#保护-Cocoa-框架" class="headerlink" title="保护 Cocoa 框架"></a>保护 Cocoa 框架</h4><p>对于多线程应用，Cocoa 框架使用锁和其他形式的内部同步来确保他们的行为正确。但是，为了防止这些锁在单线程情况下降低性能，Cocoa 在应用使用 NSThread 类生成第一个新线程之前不会创建他们。如果你仅使用 POSIX 线程例程来派生线程，那么 Cocoa 不会接收它所需的通知（当前应用是否为多线程）。当这种情况发生，设计 Cocoa 框架的操作可能会破坏应用的稳定性或使其崩溃。</p>
+<p>要让 Cocoa 知道你打算使用多线程，你索要做的就是使用 NSThread 类生成一个线程并让该线程立即退出。线程入口点不需要做任何事情。仅使用 NSThread 生成线程的行为就足以确保 Cocoa 框架所需的锁到位。</p>
+<p>如果你不确定 Cocoa 是否认为你的应用是多线程的，你可以使用 NSThread 的 isMultiThreaded 方法来检查。</p>
+<h4 id="混合使用-POSIX-和-Cocoa-锁"><a href="#混合使用-POSIX-和-Cocoa-锁" class="headerlink" title="混合使用 POSIX 和 Cocoa 锁"></a>混合使用 POSIX 和 Cocoa 锁</h4><p>在同个应用中混合使用 POSIX 和 Cocoa 锁是安全的。Cocoa 锁和条件对象本质上只是 POSIX 互斥锁和条件的包装器。但是，对于给定的锁，必须始终使用相同的接口来创建和操作该锁。换句话说，你不能使用 Cocoa <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/LegacyTechnologies/WebObjects/WebObjects_3.5/Reference/Frameworks/ObjC/Foundation/Classes/NSLock/Description.html#//apple_ref/occ/cl/NSLock">NSLock</a> 对象来操作使用 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread_mutex_init.3.html#//apple_ref/doc/man/3/pthread_mutex_init">pthread_mutex_init</a> 函数创建的互斥锁，反之亦然。</p>
+<h2 id="配置线程的属性"><a href="#配置线程的属性" class="headerlink" title="配置线程的属性"></a>配置线程的属性</h2><p>在创建线程之后，有时候在创建线程之前，你可能希望配置线程环境的不同部分。下面几节将描述可进行的一些更改，以及你什么时候可能进行这些更改。</p>
+<h3 id="配置线程的栈大小"><a href="#配置线程的栈大小" class="headerlink" title="配置线程的栈大小"></a>配置线程的栈大小</h3><p>对于你创建的每个新线程，系统将在进程空间分配特定数量的内存，作为该线程的堆栈。堆栈管理堆栈帧，也是声明线程任何局部变量的地方。分配给线程的内存数量列在了 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW7">《Thread Costs》</a> 中。</p>
+<p>如果要更改线程的堆栈大小，必须在创建线程之前修改。所有的线程技术都提供了一些设置堆栈大小的方法，尽管使用 NSThread 设置堆栈大小只在 iOS 和 OS X v10.5 以及更高版本中可用。Table 2-2 列出了每种技术的不同选项。</p>
+<p>Table 2-2 Setting the stack size of a thread</p>
+<table>
+<thead>
+<tr>
+<th>技术</th>
+<th>选项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Cocoa</td>
+<td>在 iOS 和 OS X v10.5 以及更高版本中，分配和初始化一个 NSThread 对象（不使用 detachNewThreadSelector:toTarget:withObject: 方法）。在调用线程对象的 start 方法之前，使用 setStackSize: 方法指定新的堆栈大小。</td>
+</tr>
+<tr>
+<td>POSIX</td>
+<td>创建一个新的 pthread_attr_t 结构，并使用 pthread_attr_setstacksize 函数更改默认堆栈大小。在创建线程时，将属性传递给 pthread_create 函数。</td>
+</tr>
+<tr>
+<td>Multiprocessing Services</td>
+<td>在创建线程时，将合适的堆栈大小值传递给 MPCreateTask 函数。</td>
+</tr>
+</tbody></table>
+<h3 id="配置线程本地存储"><a href="#配置线程本地存储" class="headerlink" title="配置线程本地存储"></a>配置线程本地存储</h3><p>每个线程维护一个键值对的字典，可以从线程中任何位置访问该字典。你可以使用这个字典存储在线程执行过程中持久保存的信息。例如，你可以使用它来存储希望在线程 RunLoop 多次迭代中保持的状态信息。</p>
+<p>Cocoa 和 POSIX 用不同的方式存储线程字典，所以你不能混用两种调用。但是只要你在线程代码中坚持用一种技术，最终结果应该是相似的。在 Cocoa 中，使用 NSThread 对象的 <code>threadDictionary</code> 方法来检索 <code>NSMutableDictionary</code> 对象，可以向该对象添加线程所需的任意键。在 POSIX 中，使用 <code>pthread_setspecific</code> 和 <code>pthread_getspecific </code>函数设置和获取线程的键和值。</p>
+<h3 id="设置线程的分离状态"><a href="#设置线程的分离状态" class="headerlink" title="设置线程的分离状态"></a>设置线程的分离状态</h3><p>大多数高级线程技术默认创建分离线程。大多数情况下，首选分离线程，因为他们允许系统在线程完成时立即释放线程的数据结构。分离的线程也不需要与程序进行显式交互。从线程检索结果的方法由你自行决定。相比之下，另一个线程显式地与该线程连接之前，系统不会回收可连接线程的资源，这一过程可能会阻塞执行连接的线程。</p>
+<p>你可以将可连接线程视为类似于子线程。虽然他们仍然作为独立线程运行，但可连接线程必须由另一个线程连接，然后系统才能回收其资源。可连接线程还提供了数据从现有线程传递到另一个线程的显式方法。在退出之前，可连接线程可以将数据指针或其他返回值传递给 <code>pthread_exit</code> 函数。然后，另一个线程可以通过调用 <code>pthread_join</code> 函数来声明这些数据。</p>
+<pre><code>重要: 在应用退出时，分离线程可以直接被终止，但可连接线程不行。在允许进程退出之前，必须连接每个可连接线程。因此，在线程正在执行时不应中断关键工作（如保存数据到磁盘）的情况下，可连接线程更可取。</code></pre>
+<p>如果你确实想创建可连接线程，那么唯一的方法就是使用 POSIX 线程。POSIX 默认情况下创建可连接的线程。要将线程标记为分离或是可连接，可在创建线程钱使用 pthread_attr_setdetachstate 函数修改线程属性。在线程开始之后，可以通过调用 pthread_detach 函数将可连接线程更改为分离线程。有关这些 POSIX 线程函数的更多信息，请参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread.3.html#//apple_ref/doc/man/3/pthread">pthread</a> 手册页。有关如何与线程连接的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread_join.3.html#//apple_ref/doc/man/3/pthread_join">《pthread_join》</a> 手册页。</p>
+<h3 id="设置线程的优先级"><a href="#设置线程的优先级" class="headerlink" title="设置线程的优先级"></a>设置线程的优先级</h3><p>你创建的任何新线程都具有阈值关联的默认优先级。内核的调度算法在决定运行哪个线程时考虑了线程优先级，高优先级的线程比低优先级的线程更有可能运行。更高的优先级并不保证线程有特定的执行时间，只是在调度程序在比较低优先级线程时更有可能选择它。</p>
+<pre><code>重要: 通常，让线程的优先级保持默认值是一个好主意。增加某些线程的优先级还会增加较低优先级线程饥饿的可能性。如果应用必须包含相互交互的高优先级与低优先级线程，那么低优先级线程的饥饿可能会阻塞其他线程并造成性能瓶颈。</code></pre>
+<p>如果想修改线程优先级，Cocoa 和 POSIX 都提供了一种方法。对于 Cocoa 线程，你可以使用 NSThread 的 <code>setThreadPriority:</code> 类方法来设置当前运行线程的优先级。对于 POSIX 线程，你可以使用 pthread_setschedparam 函数。更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/foundation/nsthread">《NSThread Class Reference》</a><a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread_setschedparam.3.html#//apple_ref/doc/man/3/pthread_setschedparam">《pthread_setschedparam》</a>。</p>
+<h2 id="编写线程的入口函数"><a href="#编写线程的入口函数" class="headerlink" title="编写线程的入口函数"></a>编写线程的入口函数</h2><p>在大多数情况下，线程入口例程的结构在 OS X 中与其他平台上是相通的。你可以初始化你的数据结构，执行一些工作，或可选地设置一个 RunLoop，并在代码完成时进行清理。根据你的设计，在编写输入例程时可能需要采取一些额外的步骤。</p>
+<h3 id="创建一个自动释放池"><a href="#创建一个自动释放池" class="headerlink" title="创建一个自动释放池"></a>创建一个自动释放池</h3><p>在 Objective-C 框架中链接的应用通常必须在每个线程中创建至少一个自动释放池。如果应用使用托管模型（应用在其中处理对象的保留和释放），则自动释放池将捕获从该线程自动释放的任何对象。</p>
+<p>如果应用使用垃圾回收而不是托管内存模型，啧没有必要创建自动释放池。在垃圾回收应用中存在自动释放池是无害的，而且在很大程度上被忽略了。在代码模块必须同时支持垃圾回收和托管内存模型的情况下，这是允许的。在这种情况下，必须提供自动释放池来支持托管内存模型代码，如果应用在弃用垃圾回收的情况下运行，则自动释放池将被忽略。</p>
+<p>如果你的应用使用托管内存模型，那么创建一个自动释放池应该是线程入口例程中要做的第一件事。同样，销毁这个自动释放池也应该是线程中做的最后一件事。这个池确保捕获了自动释放的对象，尽管它知道线程本身退出时才释放它们。Listing 2-2 显示了使用自动释放池的基本线程入口例程的结构。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)myThreadMainRoutine &#123;</span><br><span class="line">  <span class="built_in">NSAutoreleasePool</span> *pool = [[<span class="built_in">NSAutoreleasePool</span> alloc] init]; <span class="comment">// Top-level pool</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// Do thread work here.</span></span><br><span class="line">  </span><br><span class="line">  [pool release];  <span class="comment">// Release the objects in the pool.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为顶级的自动释放池在线程退出之前不会释放它的对象，所以持久线程应创建额外的自动释放池来频繁释放对象。例如，使用 RunLoop 的线程可能每次通过 RunLoop 创建并释放一个自动释放池。更频繁地释放对象可以防止应用内存占用增长过大，从而导致性能问题。但是，对于任何与性能相关的行为，你都应该度量代码的实际性能，并适当地调整自动释放池的使用。</p>
+<p>关于内存管理和自动释放池的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/MemoryMgmt.html#//apple_ref/doc/uid/10000011i">《Advanced Memory Management Programming Guide》</a>。</p>
+<h3 id="设置异常处理程序"><a href="#设置异常处理程序" class="headerlink" title="设置异常处理程序"></a>设置异常处理程序</h3><p>如果应用捕获并处理异常，啧线程代码应用准备捕获可能发生的任何异常。虽然最好的异常可能是发生的时候处理它们，但在线程中捕获抛出的异常失败会导致应用退出。在线程入口例程中安放最终的 try/catch 允许捕获任何未知异常并提供适当的响应。</p>
+<p>在 Xcode 中构建项目时，可以用 C++ 或 Objective-C 异常处理样式。关于 Objective-C 设置异常处理的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Exceptions/Exceptions.html#//apple_ref/doc/uid/10000012i">《Exception Programming Topics》</a>。</p>
+<h3 id="设置-RunLoop"><a href="#设置-RunLoop" class="headerlink" title="设置 RunLoop"></a>设置 RunLoop</h3><p>编写单独线程上运行的代码，有两个选项。第一个选项是为线程编写代码，将其作为一个场任务执行，很少或没有中断，并在线程完成时退出。第二个选项是将线程放入循环中，让它在请求到达时动态地处理它们。第一个选项不需要对代码进行特殊设置；你只是开始做你想要的工作。第二个选项设计设置线程的 RunLoop。</p>
+<p>OS X 和 iOS 在每个线程中实现 RunLoop 提供了内置支持。应用框架自动启动应用主线程的 RunLoop。如果创建任何辅助线程，则必须配置 RunLoop 并手动启动它。</p>
+<p>关于使用和配置 RunLoop 的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1">《Run Loops》</a>。</p>
+<h2 id="终止线程"><a href="#终止线程" class="headerlink" title="终止线程"></a>终止线程</h2><p>让线程正常退出其入口点例程是推荐做法。虽然 Cocoa、POSIX 和 Multiprocessing Services 提供了直接杀死线程的例程，但是强烈反对使用它们。杀死一个线程会阻止该线程自清理。线程分配的内存可能会泄露，线程当前使用的任何其他资源可能不会被正确清理，这将在以后产生潜在的问题。</p>
+<p>如果你逾期需要在操作过程中终止线程，那么应该从一开始就设计线程来响应取消或退出消息。对于长时间运行的操作，这可能意味着定期停止工作并检查是否有这样的消息到达。如果确实有消息要求线程退出，那么线程将有机会执行任何需要的清理并优雅地退出；否则，它可以简单地返回工作并处理下一阶段数据。</p>
+<p>响应取消消息的一种方法是使用 RunLoop 输入源来接受此类消息。Listing 2-3 展示了该代码在线程主例程中的结构。（该示例仅展示主循环部分，不包括设置自动释放池和配置要做的实际工作的步骤）。该示例在 RunLoop 上安装了一个自定义输入源，可以从另一个线程发送消息；有关设置输入源的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW7">《Configuring Run Loop Sources》</a>。在执行了总工作量的一部分之后，线程将简要地运行 RunLoop，以查看消息是否到达输入源。如果不是，RunLoop 将立即退出，循环将继续下一个工作块。因为处理程序不能直接访问 exitNow 本地变量，所以退出条件通过自称字典的键值进行通信。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)threadMainRoutine &#123;</span><br><span class="line">    <span class="built_in">BOOL</span> moreWorkToDo = <span class="literal">YES</span>;</span><br><span class="line">    <span class="built_in">BOOL</span> exitNow = <span class="literal">NO</span>;</span><br><span class="line">    <span class="built_in">NSRunLoop</span>* runLoop = [<span class="built_in">NSRunLoop</span> currentRunLoop];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Add the exitNow BOOL to the thread dictionary.</span></span><br><span class="line">    <span class="built_in">NSMutableDictionary</span>* threadDict = [[<span class="built_in">NSThread</span> currentThread] threadDictionary];</span><br><span class="line">    [threadDict setValue:@exitNow forKey:<span class="string">@&quot;ThreadShouldExitNow&quot;</span>];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Install an input source.</span></span><br><span class="line">    [<span class="keyword">self</span> myInstallCustomInputSource];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span> (moreWorkToDo &amp;&amp; !exitNow) &#123;</span><br><span class="line">        <span class="comment">// Do one chunk of a larger body of work here.</span></span><br><span class="line">        <span class="comment">// Change the value of the moreWorkToDo Boolean when done.</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Run the run loop but timeout immediately if the input source isn&#x27;t waiting to fire.</span></span><br><span class="line">        [runLoop runUntilDate:[<span class="built_in">NSDate</span> date]];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Check to see if an input source handler changed the exitNow value.</span></span><br><span class="line">        exitNow = [[threadDict valueForKey:<span class="string">@&quot;ThreadShouldExitNow&quot;</span>] boolValue];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="Run-Loops-1"><a href="#Run-Loops-1" class="headerlink" title="Run Loops"></a>Run Loops</h1><p>RunLoop 是线程相关的基础结构的一部分。RunLoop 是一个事件处理循环，用于调度工作和协调传入事件的接收。RunLoop 的目的是在有工作要做时让线程保持忙碌，在没工作时让线程休眠。</p>
+<p>RunLoop 的管理并不是完全自动的。你仍然必须设计线程的代码，以便在适当的时候启动 RunLoop 并相应传入的事件。Cocoa 和 CoreFoundation 都提供 RunLoop 对象来帮助你配置和管理线程的 RunLoop。你的应用不需要显式地创建这些对象；每个线程，包括应用的主线程，都有一个关联的 RunLoop 对象。但是，只有辅助线程需要显式地运行他们的 RunLoop。作为应用启动过程的一部分，应用框架在主线程上自动设置和运行 RunLoop。</p>
+<p>下面几节提供关于 RunLoop 以及如何为应用配置它们的更多信息。有关 RunLoop 对象的其他信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/foundation/nsrunloop">《NSRunLoop Class Reference》</a> 和 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/corefoundation/cfrunloop">《CFRunLoop Reference》</a>。</p>
+<h2 id="Run-Loops-的剖析"><a href="#Run-Loops-的剖析" class="headerlink" title="Run Loops 的剖析"></a>Run Loops 的剖析</h2><p>RunLoop 如其名。它是线程进入并用于运行事件处理程序以响应传入事件的循环。你的代码提供了用于实现运行循环和实际循环部分的控制语句——换句话说，你的代码提供了驱动 RunLoop 的 while 或 for 循环。在循环中，使用 RunLoop 对象「运行」事件处理代码，该代码接受事件并调用已安装的处理程序。</p>
+<p>RunLoop 从两种不同类型的源接收时间。输入源传递异步事件，通常是来自另一个线程或不同应用程序的消息。定时器源交付同步事件，发生在预订的时间或重复的间隔。这两种类型的源都使用特定于应用的处理程序例程在事件到达时处理它。</p>
+<p>Figure 3-1 显示了 RunLoop 和各种源的概念结构。输入源将异步事件交付给相应的处理程序，并因 runUntilDate: 方法（在线程关联的 NSRunLoop 对象上调用）退出。定时器源将事件交付给其处理程序例程，但不会导致 RunLoop 退出。</p>
+<p><img src="/2018/03/20/Threading-Programming-Guide/runloop.jpg" alt="alt"></p>
+<p>除处理输入源之外，RunLoop 还生成关于 RunLoop 行为的通知。注册的 RunLoop 观察者可以接收这些通知，并使用它们在线程上执行额外的处理。你可以使用 CoreFoundation 在线程上安装 RunLoop 观察器。</p>
+<p>下面几节提供关于 RunLoop 运行循环的组件及其操作模式的更多信息。它们还描述处理事件期间的不同时期产生的通知</p>
+<h3 id="Run-Loop-模式"><a href="#Run-Loop-模式" class="headerlink" title="Run Loop 模式"></a>Run Loop 模式</h3><p>RunLoop 模式是要监视的输入源和定时器的集合，以及要通知的 RunLoop 观察者的集合。每次 RunLoop 运行时，你都（显式或隐式地）指定要运行的特定模式。在 RunLoop 传递过程中，只监视与该模式关联的源，并允许交付他们的事件。（类似地，只有与模式相关的观察者才会被告知 RunLoop 的进度。）与其他模式关联的源将保留每个新事件，直到后续以适当的模式通过循环。</p>
+<p>在代码中，通过名称标识模式。Cocoa 和 CoreFoundation 都定义了默认模式和几种常用模式，以及在代码中指定这些模式的字符串。你可以通过简单地为模式名称指定一个自定义字符串来定义自定义模式。尽管为自定义模式分配的名称是任意的，但这些模式的内容不是任意的。你必须确保一个或多个输入源、计数器和 RunLoop 观察者添加到你创建的任何模式中，以使其有用。</p>
+<p>在通过运行 RunLoop 的特定通道期间，可以使用模式过滤掉不需要的源中的事件。大多数情况下，你希望以系统定义的「default」模式运行 RunLoop。然而模态面板可能以「modal」模式运行。在这种模式下，只有与模态面板相关的源才会将事件交付给线程。对于辅助线程，可以使用自定义模式来防止低优先级源在事件关键型操作期间交付事件。</p>
+<p><code>注意: 模式的区别是基于事件的来源，而不是事件的类型。例如，你不会使用模式只匹配鼠标按下事件或键盘事件。你可以使用模式来侦听不同的端口集、临时挂起定时器，更改源和当前监听的 RunLoop 观察者</code></p>
+<p>下表列出了 Cocoa 和 Core Foundation 定义的标准 modes，和什么时候使用这些 mode 的说明。name 列列出了你在代码中真实指定的常量。</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Default</td>
+<td>NSDefaultRunLoopMode (Cocoa) <br /> kCFRunLoopDefaultMode (Core Foundation)</td>
+<td>大部分操作使用这个 mode。大部分时候你使用这个 mode 来启动你的 run loop 和 配置你的 input sources。</td>
+</tr>
+<tr>
+<td>Connection</td>
+<td>NSConnectionReplyMode (Cocoa)</td>
+<td>Cocoa 使用这个 mode 和 <code>NSConnection</code> 对象来监听返回。你基本不会自己用到这个 mode。</td>
+</tr>
+<tr>
+<td>Modal</td>
+<td>NSModalPanelRunLoopMode</td>
+<td>Cocoa 使用这个 mode 来标识专用于 modal panels 的事件。</td>
+</tr>
+<tr>
+<td>Event tracking</td>
+<td>NSEventTrackingRunLoopMode (Cocoa)</td>
+<td>Cocoa 使用在 mouse-dragging loops 或其它用户交互的 tracking loop 中使用这个 mode 来限制收到的事件。</td>
+</tr>
+<tr>
+<td>Common Modes</td>
+<td>NSRunLoopCommonModes (Cocoa)<br />kCFRunLoopCommonModes (Core Foundation)</td>
+<td>这是一个可配置的常用 mode group。与这个 mode 相关联的 input source 也会和这个 group 中的 modes 相关联。对于 Cocoa 应用而言，这个集合默认包括 default，modal，event tracking 这些modes。Core Foundation 初始的时候包含 default 的mode。你可以使用 <code>CFRunLoopAddCommonMode</code> 函数添加自定义 mode 到这个集合。</td>
+</tr>
+</tbody></table>
+<h3 id="输入源"><a href="#输入源" class="headerlink" title="输入源"></a>输入源</h3><p>输入源异步地将事件交付给线程。事件的源取决于输入源的类型，输入源通常是两类中的一种。基于端口的输入源监视应用程序的 Mach 端口。自定义输入源监视事件的自定义源。就 RunLoop 而言，输入源是基于端口的还是自定义的并不重要。系统通常实现两种类型的输入源，你可以按原样使用它们。这两个源之间的唯一区别是他们的信号是如何发出的。基于端口的源由内核自动发出信号，而自定义源必须由另一个线程手动发出信号。</p>
+<p>创建输入源时，将其分配给 RunLoop 的一个或多个模式。模式会影响在任何给定时刻监视哪些输入源。大多数情况下，以默认模式运行 RunLoop，但也可以指定自定义模式。如果输入源不在当前监视模式中，则它生成的任何事件都将保留到运行循环以正确的模式运行为止。</p>
+<p>下面几节描述一些输入源。</p>
+<h4 id="基于-Port-的-Sources"><a href="#基于-Port-的-Sources" class="headerlink" title="基于 Port 的 Sources"></a>基于 Port 的 Sources</h4><p>Cocoa 和 CoreFoundation 为使用与端口相关的对象和函数创建基于端口的输入源提供了内置支持。例如，在 Cocoa 中，根本不需要直接创建输入源。你只需创建一个端口对象，并使用 NSPort 方法将该端口添加到 RunLoop 中。端口对象为你处理所需输入源的创建和配置。</p>
+<p>在 CoreFoundation 中，你必须手动创建端口及 RunLoop 源。在这两种情况下，你都可以使用端口不透明类型（<code>CFMachPortRef</code>, <code>CFMessagePortRef</code>, 或 <code>CFSocketRef</code>) 关联的函数来创建适当的对象。</p>
+<p>有关如何设置和配置基于自定义端口的源的示例。参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-131281">《Configuring a Port-Based Input Source》</a>。</p>
+<h4 id="自定义-Input-Sources"><a href="#自定义-Input-Sources" class="headerlink" title="自定义 Input Sources"></a>自定义 Input Sources</h4><p>要创建自定义输入源，你必须使用 CoreFoundation 中 CFRunLoopSourceRef 不透明类型的关联函数。使用几个回调函数配置自定义输入源。CoreFoundation 在不同位置调用这些函数来配置源，处理任何传入事件，并在源从 RunLoop 中移除时移除它。</p>
+<p>除了定义事件到达时自定义源的行为之外，还必须定义事件交付机制。源的这一部分运行在单独的线程上，负责为输入源提供数据，并在数据准备好进行处理时发出信号。事件交付机制由你决定，但不必过于复杂。</p>
+<p>有关如何创建自定义源的示例，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW3">《Defining a Custom InputSource》</a>。有关自定义源的参考信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/corefoundation/cfrunloopsource-rhr">《CFRunLoopSource Reference》</a>。</p>
+<h4 id="Cocoa-执行选择器源"><a href="#Cocoa-执行选择器源" class="headerlink" title="Cocoa 执行选择器源"></a>Cocoa 执行选择器源</h4><p>除基于端口的源之外，Cocoa 还定义了一个自定义输入源，允许你在任何线程上执行选择器。与基于端口的源一样，执行选择器请求在目标线程上序列化，从而减轻了在一个线程上运行多个方法可能出现的许多同步问题。与基于端口的源不同，执行选择器源会在执行选择器之后从 RunLoop 中移除自己。</p>
+<p><code>OS X v10.5 之前，执行选择器源主要用于向主线程发送消息，但是 OS X v10.5 及之后的 iOS 中，你可以使用它们想任何线程发送消息</code></p>
+<p>在另一个线程执行选择器时，目标线程必须有一个活跃的 RunLoop。对于创建的线程，这意味着等待代码显式地启动 RunLoop。但是，由于主线程启动自己的 RunLoop，所以一旦应用调用程序委托方法 applicationDidFinishLaunching: 时，你就可以开始在线程上发起调用。 RunLoop 每次通过循环处理所有排队的执行选择器调用，而不是在每次循环迭代期间处理一个。</p>
+<p>Table 3-2 列出了 NSObject 上定义的方法，这些方法可用于在其他线程上执行选择器。因为这些方法是在 NSObject 上声明的，所以可以在访问 Objective-C 对象的任何线程中使用它们，包括 POSIX 线程。这些方法实际上并不创建执行选择器的新线程。</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>performSelectorOnMainThread: withObject: waitUntilDone:</code> <br /><code>performSelectorOnMainThread: withObject:waitUntilDone:modes:</code></td>
+<td>在应用的主线程上的下次 run loop 迭代中执行指定的 selector。这些方法允许你选择是否阻塞当前线程直到 selector 被执行。</td>
+</tr>
+<tr>
+<td><code>performSelector: onThread:withObject: waitUntilDone:</code> <br /><code>performSelector: onThread:withObject:waitUntilDone:modes:</code></td>
+<td>在 <code>NSThread</code> 对象指定的线程上执行指定的 selector。这些方法允许你选择是否阻塞当前线程直到 selector 执行完。</td>
+</tr>
+<tr>
+<td><code>performSelector: withObject: afterDelay:</code> <br /><code>performSelector: withObject: afterDelay:inModes:</code></td>
+<td>在当前线程的下次 run loop 迭代中执行指定的 selector，可以指定可选的 delay 时间。因为它会等到下次 run loop 迭代，这些方法天然的有一个 mini delay 相对于目前执行的代码。多个排好队的 selectors 以它们排队的顺序执行。</td>
+</tr>
+<tr>
+<td><code>cancelPreviousPerformRequestsWithTarget:</code> <br /><code>cancelPreviousPerformRequestsWithTarget:selector:object:</code></td>
+<td>让你取消使用 <code>performSelector: withObject: afterDelay:</code> 或 <code>performSelector: withObject: afterDelay:inModes: </code> 发送给一个线程的消息。</td>
+</tr>
+</tbody></table>
+<p>关于这些方法的详细信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/objectivec/nsobject">《NSObject Class Reference》</a></p>
+<h3 id="Timer-Sources"><a href="#Timer-Sources" class="headerlink" title="Timer Sources"></a>Timer Sources</h3><p>定时器源在将来一个预先设置的时间同步向线程交付时间。定时器是线程通知自己做某事的一种方式。例如，搜索字段可以在用户连续击键间隔一定时间后使用定时器使用自动搜索。使用此延迟时间使用户有机会在搜索之前键入尽可能多的所需搜索字符串。</p>
+<p>尽管定时器是基于时间的通知，但它并不是实时机制。与输入源一样，定时器和 RunLoop 的特定模式相关联。如果定时器不处于 RunLoop 当前监视的模式，则在你以定时器支持的模式运行 RunLoop 之前，定时器不会触发。类似地，如果定时器在执行处理程序例程的过程中触发，则定时器将等待下一次通过 RunLoop 调用其处理程序例程。如果 RunLoop 根本没有运行，则定时器永远不会触发。</p>
+<p>可以将定时器配置为一次事件或多次事件。重复定时器根据计划的触发时间（而不是实际的触发时间）自动重新调度自身。例如，如果一个定时器计划在某个特定时间触发，并且再次之后每隔 5s 触发一次，计划触发的时间总是落在原来 5s 的时间间隔上，即使实际的触发时间被延迟。如果触发时间延迟太多，以至于错过了一个或多个预定的触发时间，则定时器在错过的时间段只触发一次。在对错过的时间段进行触发后，定时器将被重新调度到下一次预订的触发时间。</p>
+<p>关于配置定时器源的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW6">《Configuring Timer Sources》</a>。相关信息参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/foundation/timer">《NSTimer Class Reference》</a> 或 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/corefoundation/cfrunlooptimer-rhk">《CFRunLoopTimer Reference》</a>。</p>
+<h3 id="Run-Loop-观察者"><a href="#Run-Loop-观察者" class="headerlink" title="Run Loop 观察者"></a>Run Loop 观察者</h3><p>与源不同，源在适当的异步或同步事件发生时触发，RunLoop 观察者在 RunLoop 本身执行期间在等待位置触发。你可以使用 RunLoop 观察者来准备线程处理给定的事件，或者在线程进入休眠之前准备线程。你可以将 RunLoop 观察者与 RunLoop 中以下事件关联起来：</p>
+<ul>
+<li>RunLoop 进入</li>
+<li>RunLoop 即将处理定时器时</li>
+<li>RunLoop 将要处理输入源时</li>
+<li>RunLoop 即将进入休眠状态时</li>
+<li>RunLoop 已被唤醒，但在处理唤醒它的事件之前</li>
+<li>退出 RunLoop<br>你可以使用 CoreFoundation 向应用添加 RunLoop 观察者。要创建 RunLoop 观察者，你需要创建一个 CFRunLoopObserverRef 不透明类型的新示例。该类型跟踪自定义回调函数机器感兴趣的活动。</li>
+</ul>
+<p>与定时器类似，RunLoop 观察者可以使用一次或多次。一个一次性的观察者在它被触发后就将自己从 RunLoop 中移除，而一个重复的观察者触发后仍然还在。你可以在创建观察者时指定它是一次性运行还是重复运行。</p>
+<p>有关如何创建 RunLoop 观察者的示例，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW18">《Configuring the Run Loop》</a>。其他参考信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/corefoundation/cfrunloopobserver">《CFRunLoopObserver Reference》</a>。</p>
+<h3 id="Run-Loop-事件的顺序"><a href="#Run-Loop-事件的顺序" class="headerlink" title="Run Loop 事件的顺序"></a>Run Loop 事件的顺序</h3><p>每次运行它时，线程 RunLoop 挂起的事件并为每个附加观察者生成通知。它这样做的顺序非常具体，如下所示：</p>
+<ol>
+<li>通知观察者 RunLoop 已经进入</li>
+<li>通知观察者准备好的定时器即将触发</li>
+<li>通知观察者任何非基于端口的输入源即将触发</li>
+<li>启动任何准备启动的非基于端口的输入源</li>
+<li>如果基于端口的输入源准备好并等待启动，则立即处理该事件，转到步骤 9</li>
+<li>通知观察者线程即将休眠</li>
+<li>线程休眠，直到发生以下事件之一<ul>
+<li>基于端口的输入源事件到达</li>
+<li>定时器触发</li>
+<li>RunLoop 被显式唤醒</li>
+</ul>
+</li>
+<li>通知观察者线程刚刚唤醒</li>
+<li>处理挂起的事件<ul>
+<li>如果用户定义的定时器触发，处理定时器事件并重新循环。转到步骤 2</li>
+<li>如果触发输入源，则交付事件</li>
+<li>如果 RunLoop 被显式唤醒，但尚未超时，则重新启动循环。转到步骤 2</li>
+</ul>
+</li>
+<li>通知观察者 RunLoop 循环已经退出。</li>
+</ol>
+<p>由于定时器和输入源的观察者通知是这些事件实际发生之前交付的，因此在通知的时间和实际事件的时间之间可能存在差距。如果这些事件之间的时间间隔非常关键，你可以使用 sleep 和 awake-from-sleep 通知来帮助你关联实际事件之间的时间间隔。</p>
+<p>如果定时器和其他周期性事件是运行 RunLoop 时交付的，绕过该循环会破坏这些事件的交付。每当你通过输入源循环并重复从应用请求事件来实现鼠标跟踪例程时，就会出现这种行为的典型示例。因为你的代码直接捕获事件，而不是让应用正常分发这些事件，所以鼠标跟踪例程退出并将控制权返回给应用之前，活动计时器将无法触发。</p>
+<p>可以使用 RunLoop 对象显式唤醒 RunLoop。其他时间也可能导致 RunLoop 被唤醒。例如，添加另一个非基于端口的输入源将唤醒 RunLoop，以便可以立即处理输入源，而不是等待其他事件发生。</p>
+<h2 id="何时使用-RunLoop"><a href="#何时使用-RunLoop" class="headerlink" title="何时使用 RunLoop"></a>何时使用 RunLoop</h2><p>唯一需要显式运行 RunLoop 的时间是应用创建辅助线程的时候。应用主线程的 RunLoop 是基础结构的关键部分。应用框架提供了运行住应用循环的代码，并自动启动该循环。iOS 中的 UIApplication（或 OS X 中的 NSApplication）的运行方法作为正常启动序列的一部分启动应用的主循环。如果你使用 Xcode 模板项目来创建你的应用，你永远不应该显式地调用这些例程。</p>
+<p>对于辅助线程，你需要决定是否需要 RunLoop，如果需要，则自行配置并启动它。在所有情况下，你不需要启动线程的 RunLoop。例如，如果你使用一个线程来执行一些长时间运行和预先确定的任务，那么你可能可以避免启动 RunLoop。运行循环适用于希望与线程进行更多交互的情况。例如，如果你计划执行以下操作，则需要启动一个 RunLoop：</p>
+<ul>
+<li>使用端口或自定义输入源与其他线程通信</li>
+<li>在线程上使用定时器</li>
+<li>在 Cocoa 应用中使用 performSelector… 方法</li>
+<li>保持线程运行以执行周期性任务</li>
+</ul>
+<p>如果选择使用 RunLoop，啧配置和设置非常简单。但是，和所有线程编程一样，你应该有一个在适当情况下退出辅助线程的计划。通过让线程退出来干净地结束它总比强制它终止要好。有关如果配置和退出 RunLoop 的信息在 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW5">《Using Run Loop Objects》</a> 中描述。</p>
+<h2 id="使用-Run-Loop-对象"><a href="#使用-Run-Loop-对象" class="headerlink" title="使用 Run Loop 对象"></a>使用 Run Loop 对象</h2><p>RunLoop 对象提供主接口，用于向其加入输入源、定时器和循环观察者然后运行。每个线程都有一个与之关联的 RunLoop 对象。在 Cocoa 中，这个对象是一个 NSRunLoop 类的示例。在一个低级应用中，它指向 CFRunLoopRef 不透明类型的指针。</p>
+<h3 id="获取一个-Run-Loop-对象"><a href="#获取一个-Run-Loop-对象" class="headerlink" title="获取一个 Run Loop 对象"></a>获取一个 Run Loop 对象</h3><p>要获得当前线程的 RunLoop，可使用以下方法之一：</p>
+<ul>
+<li>在 Cocoa 应用中，使用 NSRunLoop 的 currentRunLoop 类方法来检索 NSRunLoop 对象</li>
+<li>使用 CFRunLoopGetCurrent 函数</li>
+</ul>
+<p>虽然它们都不是 toll-free 桥接类型，但你可以在需要时从 NSRunLoop 对象获得 CFRunLoopRef 不透明类型。<code>NSRunLoop</code> 定义了一个 <code>getCFRunLoop</code> 方法，该方法返回一个 <code>CFRunLoopRef</code> 类型，你可以将其传递给 CoreFoundation 例程。因为这两个对象都引用相同的 RunLoop，所以你可以根据需要混合对 <code>NSRunLoop</code> 对象和 <code>CFRunLoopRef</code> 不透明类型的调用。</p>
+<h3 id="配置-Run-Loop"><a href="#配置-Run-Loop" class="headerlink" title="配置 Run Loop"></a>配置 Run Loop</h3><p>在辅助线程中运行 RunLoop 之前，必须至少向其添加一个输入源或定时器。如果一个 RunLoop 没有任何要监视的源，那么当你试图运行它时，它将立即退出。有关如何向 RunLoop 中添加源的示例，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW7">《Configuring Run Loop Sources》</a>。</p>
+<p>除安装源外，你还可以安装 RunLoop 观察者，并使用它们来检测 RunLoop 的不同执行阶段。要安装 RunLoop 观察者，你需要创建一个 CFRunLoopObserverRef 不透明类型，并使用 CFRunLoopAddObserver 函数将其添加到你的 RunLoop 中。RunLoop 观察者必须使用 CoreFoundation 创建，即使对于 Cocoa 应用也是如此。</p>
+<p>Listing 3-1 显示了 RunLoop 观察者添加到 RunLoop 的线程的主例程。这个示例的目的是想你展示如何创建一个 RunLoop 观察者，因此代码只是设置一个 RunLoop 观察则来监视所有的 RunLoop 活动。基本处理程序例程（未显示）只是在处理定时器请求时记录 RunLoop 活动。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)threadMain &#123;</span><br><span class="line">    <span class="comment">// The application uses garbage collection, so no autorelease pool is needed.</span></span><br><span class="line">    <span class="built_in">NSRunLoop</span>* myRunLoop = [<span class="built_in">NSRunLoop</span> currentRunLoop];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create a run loop observer and attach it to the run loop.</span></span><br><span class="line">    <span class="built_in">CFRunLoopObserverContext</span> context = &#123;<span class="number">0</span>, <span class="keyword">self</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    <span class="built_in">CFRunLoopObserverRef</span> observer = <span class="built_in">CFRunLoopObserverCreate</span>(kCFAllocatorDefault, kCFRunLoopAllActivities, <span class="literal">YES</span>, <span class="number">0</span>, &amp;myRunLoopObserver, &amp;context);</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (observer)  &#123;</span><br><span class="line">        <span class="built_in">CFRunLoopRef</span>    cfLoop = [myRunLoop getCFRunLoop];</span><br><span class="line">        <span class="built_in">CFRunLoopAddObserver</span>(cfLoop, observer, kCFRunLoopDefaultMode);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create and schedule the timer.</span></span><br><span class="line">    [<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">0.1</span> target:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(doFireTimer:) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br><span class="line">    <span class="built_in">NSInteger</span>    loopCount = <span class="number">10</span>;</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">// Run the run loop 10 times to let the timer fire.</span></span><br><span class="line">        [myRunLoop runUntilDate:[<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">1</span>]];</span><br><span class="line">        loopCount--;</span><br><span class="line">    &#125; <span class="keyword">while</span> (loopCount);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在为常驻线程配置 RunLoop 时，最好至少添加一个输入源来接收消息。尽管你可以在仅添加定时器的情况下进入 RunLoop，但是一旦定时器触发，它通常会失效，这将导致 RunLoop 退出。添加一个重复定时器可以可以使 RunLoop 在更长的时间内运行，但需要周期性地触发定时器来唤醒线程，这实际上是另一种轮询形式。相反，输入源等待事件发生，让线程一直处于休眠状态，直到事件发生。</p>
+<h3 id="启动-Run-Loop"><a href="#启动-Run-Loop" class="headerlink" title="启动 Run Loop"></a>启动 Run Loop</h3><p>启动 RunLoop 只对应用中的辅助线程是必要的。一个 RunLoop 必须至少有一个输入源或定时器来监控。如果没有添加，RunLoop 将立即退出。</p>
+<p>有几种方法可以启动 RunLoop，包括以下方法：</p>
+<ul>
+<li>无条件</li>
+<li>有固定时间限制</li>
+<li>在特定模式下<br>无条件地进入 RunLoop 是最简单的选择，但也是最不可取的。无条件运行 RunLoop 会将线程放入一个永久循环中，这使你几乎无法控制 RunLoop 本身。你可以添加和删除输入源和定时器，但是停止 RunLoop 的唯一方法是终止它。它无法以自定义模式运行 RunLoop。</li>
+</ul>
+<p>逾期无条件地运行 RunLoop，不如使用超时值运行。当你使用超时值时，RunLoop 将一直运行直到事件到达或分配的时间过期。如果事件到达，则将该事件分配给处理程序处理，然后 RunLoop 退出。然后，你的代码可以重新启动 RunLoop 来处理下一个事件。如果分配的时间过期，你可以简单地重新启动 RunLoop，或者使用该时间执行任何需要的内务处理。</p>
+<p>除超时值外，还可以使用特定模式运行 RunLoop。模式和超时值不是互斥的，可以在启动 RunLoop 同时使用。模式限制向 RunLoop 交付事件的源的类型，在 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW12">《Run Loop Modes》</a> 中进行了更详细的描述。</p>
+<p>Listing 3-2 展示了线程主入口例程的骨架版本。本例的关键部分展示了 RunLoop 的基本结构。实际上，你将输入源和定时器添加到 RunLoop 中，然后重复调用一个例程来启动 RunLoop。每次 RunLoop 返回时，你都要检查是否出现了需要退出线程的任何条件。该示例使用了 CoreFoundation RunLoop 例程，以便检查返回结果并确定 RunLoop 退出的原因。如果你使用 Cocoa 并且不需要检查返回值，也可以使用 NSRunLoop 类方法以类似的方式运行 RunLoop。（有关调用 NSRunLoop 类方法的 RunLoop 示例，参见 Listing 3-14）。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)skeletonThreadMain &#123;</span><br><span class="line">    <span class="comment">// Set up an autorelease pool here if not using garbage collection.</span></span><br><span class="line">    <span class="built_in">BOOL</span> done = <span class="literal">NO</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Add your sources or timers to the run loop and do any other setup.</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">// Start the run loop but return after each source is handled.</span></span><br><span class="line">        SInt32    result = <span class="built_in">CFRunLoopRunInMode</span>(kCFRunLoopDefaultMode, <span class="number">10</span>, <span class="literal">YES</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// If a source explicitly stopped the run loop, or if there are no</span></span><br><span class="line">        <span class="comment">// sources or timers, go ahead and exit.</span></span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> ((result == kCFRunLoopRunStopped) || (result == kCFRunLoopRunFinished)) &#123;</span><br><span class="line">            done = <span class="literal">YES</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Check for any other exit conditions here and set the</span></span><br><span class="line">        <span class="comment">// done variable as needed.</span></span><br><span class="line">    &#125; <span class="keyword">while</span> (!done);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Clean up code here. Be sure to release any allocated autorelease pools.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>递归地运行 RunLoop 是可能的。换句话说，你可以调用 CFRunLoopRun、CFRunLoopRunInMode 或任何 NSRunLoop 方法来从输入源或定时器的处理程序例程中启动 RunLoop。这样做时，你可以使用任何希望运行嵌套 RunLoop 的模式，包括外部 RunLoop 所使用的模式。</p>
+<h3 id="退出-Run-Loop"><a href="#退出-Run-Loop" class="headerlink" title="退出 Run Loop"></a>退出 Run Loop</h3><p>在处理事件前，有两种方法可以使 RunLoop 退出：</p>
+<ul>
+<li>使用超时值配置 RunLoop</li>
+<li>告诉 RunLoop 停止</li>
+</ul>
+<p>使用一个超时值是首选如果你能管理它的话。指定一个超时值可以让 RunLoop 在退出之前完成所有的正常处理，包括向 RunLoop 观察者发送通知。</p>
+<p>使用 CFRunLoopStop 函数显式地停止 RunLoop 将产生类似于超时的效果。RunLoop 发出任何剩余的 RunLoop 通知，然后退出。区别在于，你可以在无条件启动的 RunLoop 上使用这种技术。</p>
+<p>尽管移除 RunLoop 的输入源和定时器也可能导致 RunLoop 退出，但这不是停止 RunLoop 的可靠方法。一些系统例程将输入源添加到 RunLoop 中以处理所需的事件。因为你的代码可能不认识这些输入源，所以无法移除它们，这将阻止 RunLoop 退出。</p>
+<h3 id="线程安全和-Run-Loop-对象"><a href="#线程安全和-Run-Loop-对象" class="headerlink" title="线程安全和 Run Loop 对象"></a>线程安全和 Run Loop 对象</h3><p>线程安全性取决于使用哪个 API 来操作 RunLoop。CoreFoundation 中的函数通常是线程安全的，可以从任何线程调用。但是，如果你正在执行更改 RunLoop 配置的操作，应该尽可能地从拥有 RunLoop 的线程去执行。</p>
+<p>Cocoa NSRunLoop 类并不像它的核心基础类那样本质上是线程安全的。如果你正在使用 NSRunLoop 类修改 RunLoop，那么你应该只从拥有该 RunLoop 的同一线程进行修改。向属于不同线程的 RunLoop 添加输入源或定时器可能会导致代码崩溃或以一种意外的方式运行。</p>
+<h2 id="配置-Run-Loop-Sources"><a href="#配置-Run-Loop-Sources" class="headerlink" title="配置 Run Loop Sources"></a>配置 Run Loop Sources</h2><p>下面的小姐将展示如何在 Cocoa 和 CoreFoundation 中设置不同类型的输入源。</p>
+<h3 id="定义自定义输入源"><a href="#定义自定义输入源" class="headerlink" title="定义自定义输入源"></a>定义自定义输入源</h3><p>创建自定义输入源需要定义一下内容：</p>
+<ul>
+<li>你希望输入源处理的信息</li>
+<li>一个调度程序例程，让感兴趣的客户端知道如何联系你的输入源</li>
+<li>一个处理程序例程，用于执行任何客户端发送的请求</li>
+<li>取消例程，试输入源无效</li>
+</ul>
+<p>因为你创建了一个自定义输入源来处理自定义信息，所以实际的配置是灵活的。调度器、处理程序和取消例程是自定义源几乎总是需要的关键例程。然而输入源行为的其余大部分都发生在这些处理程序例程之外。例如，由你定义将数据传递到输入源以及将输入源的存在与其他线程通信的机制。</p>
+<p>Figure 3-2 显示了自定义输入源的示例配置。在本例中，应用的主里程维护队输入源的引用，该输入源的自定义命令缓冲区以及安装输入源的 RunLoop。当主线程有一个任务要传递给工作线程时，它将一个命令连同工作线程启动任务所需的任何信息一起发送到命令缓冲区。（因为主线程和工作线程的输入源都可以访问命令缓冲区，所以应该同步该访问。）发布命令后，主线程向输入源发出信号，并唤醒工作线程的 RunLoop。在接收到唤醒命令后，RunLoop 调用输入源的处理程序，该处理程序处理在命令缓冲区中找到的命令。</p>
+<p><img src="/2018/03/20/Threading-Programming-Guide/custom-input-source.jpg" alt="alt"></p>
+<p>下面的部分解释了上图种的自定义 input source 的实现，展示了你需要实现的核心代码。</p>
+<h4 id="定义输入源"><a href="#定义输入源" class="headerlink" title="定义输入源"></a>定义输入源</h4><p>定义自定义输入源需要使用 CoreFoundation 例程来配置 RunLoop 源并将其添加到 RunLoop。尽管基本的处理程序是基于 C 的函数，但这并不妨碍你为这些函数编写包装器，并使用 Objective-C 和 C++ 实现代码体。</p>
+<p>Figure 3-2 中介绍的输入源使用 Objective-C 对象管理命令缓冲区并与 RunLoop 协调。Listing 3-3 显示了这个对象的定义。<code>RunLoopSource</code> 对象管理一个命令缓冲区，并使用该缓冲区接收来自其他线程的消息。这个清单还显示了 <code>RunLoopContext</code> 对象的定义，它实际上只是一个容器对象，用于向应用的主线程传递 RunLoopSource 对象及 RunLoop 引用。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">RunLoopSource</span> : <span class="title">NSObject</span> </span>&#123;</span><br><span class="line">    <span class="built_in">CFRunLoopSourceRef</span> runLoopSource;</span><br><span class="line">    <span class="built_in">NSMutableArray</span>* commands;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">id</span>)init;</span><br><span class="line">- (<span class="keyword">void</span>)addToCurrentRunLoop;</span><br><span class="line">- (<span class="keyword">void</span>)invalidate;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Handler method</span></span><br><span class="line">- (<span class="keyword">void</span>)sourceFired;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Client interface for registering commands to process</span></span><br><span class="line">- (<span class="keyword">void</span>)addCommand:(<span class="built_in">NSInteger</span>)command withData:(<span class="keyword">id</span>)data;</span><br><span class="line">- (<span class="keyword">void</span>)fireAllCommandsOnRunLoop:(<span class="built_in">CFRunLoopRef</span>)runloop;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// These are the CFRunLoopSourceRef callback functions.</span></span><br><span class="line"><span class="keyword">void</span> RunLoopSourceScheduleRoutine (<span class="keyword">void</span> *info, <span class="built_in">CFRunLoopRef</span> rl, <span class="built_in">CFStringRef</span> mode);</span><br><span class="line"><span class="keyword">void</span> RunLoopSourcePerformRoutine (<span class="keyword">void</span> *info);</span><br><span class="line"><span class="keyword">void</span> RunLoopSourceCancelRoutine (<span class="keyword">void</span> *info, <span class="built_in">CFRunLoopRef</span> rl, <span class="built_in">CFStringRef</span> mode);</span><br><span class="line"></span><br><span class="line"><span class="comment">// RunLoopContext is a container object used during registration of the input source.</span></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">RunLoopContext</span> : <span class="title">NSObject</span> </span>&#123;</span><br><span class="line">    <span class="built_in">CFRunLoopRef</span>        runLoop;</span><br><span class="line">    RunLoopSource*        source;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">readonly</span>) <span class="built_in">CFRunLoopRef</span> runLoop;</span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">readonly</span>) RunLoopSource* source;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">id</span>)initWithSource:(RunLoopSource*)src andLoop:(<span class="built_in">CFRunLoopRef</span>)loop;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+
+<p>尽管 Objective-C 代码管理输入源的自定义数据，但是将输入源添加到 RunLoop 需要基于 C 的回调函数。当你实际将 RunLoop 添加到 RunLoop 时，将调用第一个函数，如 Listing 3-4 琐事。因为这个输入源只有一个客户机（主线程），所以它使用调度器函数发送消息，以便在该线程上的应用委托中注册自己。当委托想要与输入源通信时，它使用 RunLoopContext 对象中的信息来这样做。</p>
+<p>Listing 3-4 Scheduling a run loop source</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> RunLoopSourceScheduleRoutine (<span class="keyword">void</span> *info, <span class="built_in">CFRunLoopRef</span> rl, <span class="built_in">CFStringRef</span> mode) &#123;</span><br><span class="line">    RunLoopSource* obj = (RunLoopSource*)info;</span><br><span class="line">    AppDelegate*   del = [AppDelegate sharedAppDelegate];</span><br><span class="line">    RunLoopContext* theContext = [[RunLoopContext alloc] initWithSource:obj andLoop:rl];</span><br><span class="line">    [del performSelectorOnMainThread:<span class="keyword">@selector</span>(registerSource:) withObject:theContext waitUntilDone:<span class="literal">NO</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最重要的回调例程之一是在输入源有信号时用于处理自定义数据的回调例程。Listing 3-5 显示了 <code>RunLoopSource</code> 对象关联的执行回调例程。这个函数只是将执行此工作的请求转发给 <code>sourceFired</code> 方法，然后该方法处理命令缓冲区出现的任何命令。</p>
+<p>Listing 3-5 Performing work in the input source</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> RunLoopSourcePerformRoutine (<span class="keyword">void</span> *info) &#123;</span><br><span class="line">    RunLoopSource*  obj = (RunLoopSource*)info;</span><br><span class="line">    [obj sourceFired];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果你使用 CFRunLoopSourceInvalidate 函数将输入源从其 RunLoop 中删除，系统将调用输入源的取消例程。你可以使用此例程通知客户端你的输入源不再有效，它们应该移除对它的任何引用。Listing 3-6 显示了注册到 RunLoopSource 的取消回调例程。这个函数向应用委托发送了另一个 RunLoopContext 对象，但这一次要求委托移除 RunLoop 源的引用。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> RunLoopSourceCancelRoutine (<span class="keyword">void</span> *info, <span class="built_in">CFRunLoopRef</span> rl, <span class="built_in">CFStringRef</span> mode) &#123;</span><br><span class="line">    RunLoopSource* obj = (RunLoopSource*)info;</span><br><span class="line">    AppDelegate* del = [AppDelegate sharedAppDelegate];</span><br><span class="line">    RunLoopContext* theContext = [[RunLoopContext alloc] initWithSource:obj andLoop:rl];</span><br><span class="line">    </span><br><span class="line">    [del performSelectorOnMainThread:<span class="keyword">@selector</span>(removeSource:) withObject:theContext waitUntilDone:<span class="literal">YES</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>应用委托的 registerSource: 和 removeSource: 方法的代码展示在 《Coordinating with Clients of the Input Source》 中。</code></p>
+<h4 id="在-RunLoop-中安装输入源"><a href="#在-RunLoop-中安装输入源" class="headerlink" title="在 RunLoop 中安装输入源"></a>在 RunLoop 中安装输入源</h4><p>下例展示了 RunLoopSource 类的 init 和 addToCurrentRunLoop 方法。init 方法创建 CFRunLoopSourceRef 不透明类型，该类型必须实际添加到 RunLoop 中。它将 RunLoopSource 对象本身作为上下文信息传递，这样回调例程就有一个指向该对象的指针。直到工作线程调用 addToCurrentRunLoop 方法（此时调用 RunLoopSourceScheduleRoutine 回调函数），输入源的安装才会发送。一旦输入源被添加到 RunLoop 中，线程就可以运行它的 RunLoop 来等待它。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">id</span>)init</span><br><span class="line">    <span class="built_in">CFRunLoopSourceContext</span></span><br><span class="line">context = &#123;<span class="number">0</span>, <span class="keyword">self</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>,</span><br><span class="line">                &amp;RunLoopSourceScheduleRoutine,</span><br><span class="line">                RunLoopSourceCancelRoutine,</span><br><span class="line">                RunLoopSourcePerformRoutine&#125;;</span><br><span class="line">    runLoopSource = <span class="built_in">CFRunLoopSourceCreate</span>(<span class="literal">NULL</span>, <span class="number">0</span>, &amp;context);</span><br><span class="line">    commands = [[<span class="built_in">NSMutableArray</span> alloc] init];</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">self</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)addToCurrentRunLoop &#123;</span><br><span class="line">    <span class="built_in">CFRunLoopRef</span> runLoop = <span class="built_in">CFRunLoopGetCurrent</span>();</span><br><span class="line">    <span class="built_in">CFRunLoopAddSource</span>(runLoop, runLoopSource, kCFRunLoopDefaultMode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="协调输入源客户端"><a href="#协调输入源客户端" class="headerlink" title="协调输入源客户端"></a>协调输入源客户端</h4><p>要使输入源有效，需要对其进行操作并从另一个线程发出信号。输入源的全部意义就是让它关联的线程休眠，直到有事情要做为止。这就要求应用中其他线程了解输入源并有方法与之通信。</p>
+<p>通知客户端输入源的一种方法是在输入源在 RunLoop 中首次安装时发出注册请求。你可以任意多的客户注册输入源，也可以向某个中央代理注册输入源，然后该代理将输入源提供给感兴趣的客户端。Listing 3-8 显示了应用委托定义的注册方法，并在调用 RunLoopSource 对象的调度器函数时调用改方法。该方法接收 RunLoopSource 对象提供的 RunLoopContext 对象，并将其添加到源列表中。这个清单还显示了在讲输入源从 RunLoop 中移除时用于注销其注册的例程。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)registerSource:(RunLoopContext*)sourceInfo &#123;</span><br><span class="line">    [sourcesToPing addObject:sourceInfo];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)removeSource:(RunLoopContext*)sourceInfo &#123;</span><br><span class="line">    <span class="keyword">id</span>    objToRemove = <span class="literal">nil</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (RunLoopContext* context <span class="keyword">in</span> sourcesToPing) &#123;</span><br><span class="line">        <span class="keyword">if</span> ([context isEqual:sourceInfo]) &#123;</span><br><span class="line">            objToRemove = context;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (objToRemove) &#123;</span><br><span class="line">        [sourcesToPing removeObject:objToRemove];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="向输入源发送信号"><a href="#向输入源发送信号" class="headerlink" title="向输入源发送信号"></a>向输入源发送信号</h4><p>在将数据传递给输入源之后，客户端必须向源发出信号并唤醒其 RunLoop。向源发出信号可以让 RunLoop 知道源已准备好被处理。由于信号发生时线程可能处于休眠状态，因此应该始终显式的唤醒 RunLoop。如果不这样做，可能会导致处理输入源的延迟。</p>
+<p>Listing 3-9 显示了 <code>RunLoopSource</code> 对象的 <code>fireCommandsOnRunLoop</code> 方法。当客户端准备执行缓冲区命令去处理源时，调用此方法。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)fireCommandsOnRunLoop:(<span class="built_in">CFRunLoopRef</span>)runloop &#123;</span><br><span class="line">    <span class="built_in">CFRunLoopSourceSignal</span>(runLoopSource);</span><br><span class="line">    <span class="built_in">CFRunLoopWakeUp</span>(runloop);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>永远不要尝试通过消息传递自定义输入源去处理 SIGHUP 或其他类型的进程级信号。用于唤醒 RunLoop 的 CoreFoundation 函数 并不是信号安全的，不应在应用的信号处理程序例程中使用。有关信号处理程序例程的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sigaction.2.html#//apple_ref/doc/man/2/sigaction">《sigaction》</a> 手册。</p>
+<h3 id="配置-Timer-Sources"><a href="#配置-Timer-Sources" class="headerlink" title="配置 Timer Sources"></a>配置 Timer Sources</h3><p>要创建定时器源，只需创建一个定时器对象并将其调度到 RunLoop 中。在 Cocoa 中，使用 NSTimer 类去创建新的定时器对象，在 CoreFoundation 中使用 CFRunLoopTimerRef 不透明类型。在内部，NSTimer 类只是 CoreFoundation 的一个扩展，它提供了一些方便的特性，比如使用同样的方法创建和调度定时器的能力。</p>
+<p>在 Cocoa 中，你使用一下两种类方法创建和调度定时器：</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/LegacyTechnologies/WebObjects/WebObjects_3.5/Reference/Frameworks/ObjC/Foundation/Classes/NSTimer/Description.html#//apple_ref/occ/clm/NSTimer/scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:">scheduledTimerWithTimeInterval:target:selector:userInfo:repeats:</a></p>
+</li>
+<li><p><a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/LegacyTechnologies/WebObjects/WebObjects_3.5/Reference/Frameworks/ObjC/Foundation/Classes/NSTimer/Description.html#//apple_ref/occ/clm/NSTimer/scheduledTimerWithTimeInterval:invocation:repeats:">scheduledTimerWithTimeInterval:invocation:repeats:</a></p>
+</li>
+</ul>
+<p>这些方法创建定时器，并在默认模式（NSDefaultRunLoopMode）中将其添加到当前线程的 RunLoop 中。如果需要，还可以手动调度定时器，方式是创建 NSTimer 对象，然后使用 NSRunLoop 的 addTimer:forMode: 方法将其添加到 RunLoop 中。这两种技术基本上做的是相通的事情，但是为你提供了对定时器配置的不同级别的控制。例如，如果你创建定时器并手动将其添加到 RunLoop 中，啧可以使用默认模式以外的模式来实现。Listing 3-10 展示了如何使用这两种技术创建定时器。第一个定时器的初始延迟为 1s，但之后每 0.1s 定期触发一次。第二个定时器在初始 0.2s 延迟后开始触发，之后每 0.2s 触发一次。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSRunLoop</span>* myRunLoop = [<span class="built_in">NSRunLoop</span> currentRunLoop];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Create and schedule the first timer.</span></span><br><span class="line"><span class="built_in">NSDate</span>* futureDate = [<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">1.0</span>];</span><br><span class="line"><span class="built_in">NSTimer</span>* myTimer = [[<span class="built_in">NSTimer</span> alloc] initWithFireDate:futureDate interval:<span class="number">0.1</span> target:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(myDoFireTimer1:) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];  </span><br><span class="line">[myRunLoop addTimer:myTimer forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Create and schedule the second timer.</span></span><br><span class="line">[<span class="built_in">NSTimer</span> scheduledTimerWithTimeInterval:<span class="number">0.2</span> target:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(myDoFireTimer2:) userInfo:<span class="literal">nil</span> repeats:<span class="literal">YES</span>];</span><br></pre></td></tr></table></figure>
+
+<p>使用 CoreFoundation 函数配置定时器所需的代码。尽管本例没有在上下文中传递任何用户定义的信息，但你可以使用此结构传递定时器所需的任何自定义数据。有关此结构内容的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/documentation/corefoundation/cfrunlooptimer-rhk">《CFRunLoopTimer Reference》</a>。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">CFRunLoopRef</span> runLoop = <span class="built_in">CFRunLoopGetCurrent</span>();</span><br><span class="line"><span class="built_in">CFRunLoopTimerContext</span> context = &#123;<span class="number">0</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line"><span class="built_in">CFRunLoopTimerRef</span> timer = <span class="built_in">CFRunLoopTimerCreate</span>(kCFAllocatorDefault, <span class="number">0.1</span>, <span class="number">0.3</span>, <span class="number">0</span>, <span class="number">0</span>, &amp;myCFTimerCallback, &amp;context);</span><br><span class="line"><span class="built_in">CFRunLoopAddTimer</span>(runLoop, timer, kCFRunLoopCommonModes);</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置基于端口的输入源"><a href="#配置基于端口的输入源" class="headerlink" title="配置基于端口的输入源"></a>配置基于端口的输入源</h3><p>Cocoa 和 CoreFoundation 都为线程间或进程间的通信提供了基于端口的对象。以下部分想你展示如何使用不同类型的端口设置端口通信。</p>
+<h4 id="配置-NSMachPort-对象"><a href="#配置-NSMachPort-对象" class="headerlink" title="配置 NSMachPort 对象"></a>配置 NSMachPort 对象</h4><p>要与 NSMachPort 对象建立本地连接。需要创建一个端口对象并将其添加到 primary 线程的 RunLoop 中。启动辅助线程时，将相同的对象传递给线程的入口函数。辅助线程可以使用相同的对象将消息发送回 primary 线程</p>
+<h5 id="实现主线程的代码"><a href="#实现主线程的代码" class="headerlink" title="实现主线程的代码"></a>实现主线程的代码</h5><p>下面的代码展示了主线程起一个非主线程作为 worker 线程。因为 Cocoa 框架进行许多配置 port 和 run loop 的中间步骤，<code>launchThread</code> 方法要比使用 Core Foundation 实现同样的功能要短很多。Core Foundation 的实现传递 local port 的名字给 worker 线程，而 Cocoa 传递一个 <code>NSPort</code> 对象。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)launchThread &#123;</span><br><span class="line">    <span class="built_in">NSPort</span>* myPort = [<span class="built_in">NSMachPort</span> port];</span><br><span class="line">    <span class="keyword">if</span> (myPort) &#123;</span><br><span class="line">        <span class="comment">// This class handles incoming port messages.</span></span><br><span class="line">        [myPort setDelegate:<span class="keyword">self</span>];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Install the port as an input source on the current run loop.</span></span><br><span class="line">        [[<span class="built_in">NSRunLoop</span> currentRunLoop] addPort:myPort forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Detach the thread. Let the worker release the port.</span></span><br><span class="line">        [<span class="built_in">NSThread</span> detachNewThreadSelector:<span class="keyword">@selector</span>(LaunchThreadWithPort:) toTarget:[MyWorkerClass <span class="keyword">class</span>] withObject:myPort];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了在线程之间建立双向通信通道，你可能希望工作线程在签入消息中向主线程发送自己的本地端口。接收签入消息可能让主线程知道第二个线程一切顺利，还可以向该线程发送更多消息。</p>
+<p>Listing 3-13 显示了主线程的 handlePortMessage: 方法。当数据到达线程自己的本地端口时调用此方法。当签入消息到达时，该方法直接从端口消息中检索辅助线程的端口，并将其保存以供以后使用。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kCheckinMessage 100</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Handle responses from the worker thread.</span></span><br><span class="line">- (<span class="keyword">void</span>)handlePortMessage:(<span class="built_in">NSPortMessage</span> *)portMessage &#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> message = [portMessage msgid];</span><br><span class="line">    <span class="built_in">NSPort</span>* distantPort = <span class="literal">nil</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (message == kCheckinMessage) &#123;</span><br><span class="line">        <span class="comment">// Get the worker thread’s communications port.</span></span><br><span class="line">        distantPort = [portMessage sendPort];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Retain and save the worker port for later use.</span></span><br><span class="line">        [<span class="keyword">self</span> storeDistantPort:distantPort];</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Handle other messages.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="实现非主线程代码"><a href="#实现非主线程代码" class="headerlink" title="实现非主线程代码"></a>实现非主线程代码</h5><p>对于辅助工作线程，必须配置该线程并使用指定的端口将信息传回 primary 线程。</p>
+<p>Listing 3-14 展示了设置工作线程的代码。在为线程创建一个自动释放池后，该方法将创建一个 worker 对象来驱动执行。worker 对象的 <code>sendCheckinMessage: </code>方法（见 Listing 3-15）为工作线程创建了一个本地端口，并将签入消息发送回主线程。。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">+(<span class="keyword">void</span>)LaunchThreadWithPort:(<span class="keyword">id</span>)inData &#123;</span><br><span class="line">    <span class="built_in">NSAutoreleasePool</span>*  pool = [[<span class="built_in">NSAutoreleasePool</span> alloc] init];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Set up the connection between this thread and the main thread.</span></span><br><span class="line">    <span class="built_in">NSPort</span>* distantPort = (<span class="built_in">NSPort</span>*)inData;</span><br><span class="line">    </span><br><span class="line">    MyWorkerClass*  workerObj = [[<span class="keyword">self</span> alloc] init];</span><br><span class="line">    [workerObj sendCheckinMessage:distantPort];</span><br><span class="line">    [workerObj sendCheckinMessage:distantPort];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Let the run loop process things.</span></span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        [[<span class="built_in">NSRunLoop</span> currentRunLoop] runMode:<span class="built_in">NSDefaultRunLoopMode</span> beforeDate:[<span class="built_in">NSDate</span> distantFuture]];</span><br><span class="line">    &#125; <span class="keyword">while</span> (![workerObj shouldExit]);</span><br><span class="line">    </span><br><span class="line">    [workerObj release];</span><br><span class="line">    [workerObj release];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在使用 NSMachPort 时，本地线程和远端线程可以使用相同的端口对象进行线程之间的单向通信。换句话说，由一个线程创建的本地端口对象成为另一个线程的远程端口对象。</p>
+<p>Listing 3-15 显示了辅助线程的签入例程。该方法为将来的通信设置自己的本地端口，然后将签入消息发送回主线程。该方法使用 <code>LaunchThreadWithPort:</code> 方法中接收到的端口对象作为消息的目标。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Worker thread check-in method</span></span><br><span class="line">- (<span class="keyword">void</span>)sendCheckinMessage:(<span class="built_in">NSPort</span>*)outPort &#123;</span><br><span class="line">    <span class="comment">// Retain and save the remote port for future use.</span></span><br><span class="line">    [<span class="keyword">self</span> setRemotePort:outPort];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create and configure the worker thread port.</span></span><br><span class="line">     <span class="built_in">NSPort</span>* myPort = [<span class="built_in">NSMachPort</span> port];</span><br><span class="line">     [myPort setDelegate:<span class="keyword">self</span>];</span><br><span class="line">     [[<span class="built_in">NSRunLoop</span> currentRunLoop] addPort:myPort forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line">     </span><br><span class="line">     <span class="comment">// Create the check-in message.</span></span><br><span class="line">     <span class="built_in">NSPortMessage</span>* messageObj = [[<span class="built_in">NSPortMessage</span> alloc] initWithSendPort:outPort receivePort:myPort components:<span class="literal">nil</span>];</span><br><span class="line">    <span class="keyword">if</span> (messageObj) &#123;</span><br><span class="line">        <span class="comment">// Finish configuring the message and send it immediately.</span></span><br><span class="line">        [messageObj setMsgId:setMsgid:kCheckinMessage];</span><br><span class="line">        [messageObj sendBeforeDate:[<span class="built_in">NSDate</span> date]];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置-NSMessagePort-对象"><a href="#配置-NSMessagePort-对象" class="headerlink" title="配置 NSMessagePort 对象"></a>配置 NSMessagePort 对象</h4><p>要与 NSMessagePort 对象建立本地连接，不能简单地在线程之间传递端口对象。远程消息端口必须按名称获取。要在 Cocoa 中实现这一点，需要使用特定的名称注册本地端口然后将该名称传递给远端线程，以便它能获得合适的端口对象进行通信。如果你想用消息端口，Listing 3-16 显示了端口创建和注册的过程</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSPort</span>* localPort = [[<span class="built_in">NSMessagePort</span> alloc] init];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Configure the object and add it to the current run loop.</span></span><br><span class="line">[localPort setDelegate:<span class="keyword">self</span>];</span><br><span class="line">[[<span class="built_in">NSRunLoop</span> currentRunLoop] addPort:localPort forMode:<span class="built_in">NSDefaultRunLoopMode</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Register the port using a specific name. The name must be unique.</span></span><br><span class="line"><span class="built_in">NSString</span>* localPortName = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@&quot;MyPortName&quot;</span>];</span><br><span class="line">[[<span class="built_in">NSMessagePortNameServer</span> sharedInstance] registerPort:localPort name:localPortName];</span><br></pre></td></tr></table></figure>
+
+<h4 id="在-CoreFoundation-中配置基于端口的输入源"><a href="#在-CoreFoundation-中配置基于端口的输入源" class="headerlink" title="在 CoreFoundation 中配置基于端口的输入源"></a>在 CoreFoundation 中配置基于端口的输入源</h4><p>本节展示如何使用 CoreFoundation 在应用主线程与工作线程间设置双向通道。</p>
+<p>Listing 3-17 显示了应用的主线程启动工作线程调用的代码。代码所做的第一件事是设置 CFMessagePortRef 不透明类型，以监听来自工作线程的消息。工作线程需要端口名称来进行连接，以便将字符串值传递到工作线程的入口函数。端口名称通常在当前用户上下文中是唯一的；否则可能会遇到冲突。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kThreadStackSize (8 *4096)</span></span><br><span class="line"></span><br><span class="line">OSStatus MySpawnThread() &#123;</span><br><span class="line">    <span class="comment">// Create a local port for receiving responses.</span></span><br><span class="line">    <span class="built_in">CFStringRef</span> myPortName;</span><br><span class="line">    <span class="built_in">CFMessagePortRef</span> myPort;</span><br><span class="line">    <span class="built_in">CFRunLoopSourceRef</span> rlSource;</span><br><span class="line">    <span class="built_in">CFMessagePortContext</span> context = &#123;<span class="number">0</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    Boolean shouldFreeInfo;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create a string with the port name.</span></span><br><span class="line">    myPortName = <span class="built_in">CFStringCreateWithFormat</span>(<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="built_in">CFSTR</span>(<span class="string">&quot;com.myapp.MainThread&quot;</span>));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create the port.</span></span><br><span class="line">    myPort = <span class="built_in">CFMessagePortCreateLocal</span>(<span class="literal">NULL</span>, myPortName, &amp;MainThreadResponseHandler, &amp;context, &amp;shouldFreeInfo);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (myPort != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="comment">// The port was successfully created.</span></span><br><span class="line">        <span class="comment">// Now create a run loop source for it.</span></span><br><span class="line">        </span><br><span class="line">        rlSource = <span class="built_in">CFMessagePortCreateRunLoopSource</span>(<span class="literal">NULL</span>, myPort, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (rlSource) &#123;</span><br><span class="line">            <span class="comment">// Add the source to the current run loop.</span></span><br><span class="line">            <span class="built_in">CFRunLoopAddSource</span>(<span class="built_in">CFRunLoopGetCurrent</span>(), rlSource, kCFRunLoopDefaultMode);</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// Once installed, these can be freed.</span></span><br><span class="line">            <span class="built_in">CFRelease</span>(myPort);</span><br><span class="line">            <span class="built_in">CFRelease</span>(rlSource);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create the thread and continue processing.</span></span><br><span class="line">    <span class="built_in">MPTaskID</span>        taskID;</span><br><span class="line">    <span class="keyword">return</span>(<span class="built_in">MPCreateTask</span>(&amp;ServerThreadEntryPoint, (<span class="keyword">void</span>*)myPortName, kThreadStackSize, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>, &amp;taskID);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>安装端口并启动线程后，主线程可以在等待线程签入时继续其常规执行。当签入消息到达时，它被派发到主线程的 MainThreadResponseHandler 函数，如 Listing 3-18 所示。此函数提取工作线程的端口名称，并为将来的通信创建通道。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> kCheckinMessage 100</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Main thread port message handler</span></span><br><span class="line"><span class="built_in">CFDataRef</span> MainThreadResponseHandler(<span class="built_in">CFMessagePortRef</span> local, SInt32 msgid, <span class="built_in">CFDataRef</span> data, <span class="keyword">void</span>* info) &#123;</span><br><span class="line">    <span class="keyword">if</span> (msgid == kCheckinMessage) &#123;</span><br><span class="line">        <span class="built_in">CFMessagePortRef</span> messagePort;</span><br><span class="line">        <span class="built_in">CFStringRef</span> threadPortName;</span><br><span class="line">        <span class="built_in">CFIndex</span> bufferLength = <span class="built_in">CFDataGetLength</span>(data);</span><br><span class="line">        <span class="built_in">UInt8</span>* buffer = <span class="built_in">CFAllocatorAllocate</span>(<span class="literal">NULL</span>, bufferLength, <span class="number">0</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">CFDataGetBytes</span>(data, <span class="built_in">CFRangeMake</span>(<span class="number">0</span>, bufferLength), buffer);</span><br><span class="line">        threadPortName = <span class="built_in">CFStringCreateWithBytes</span> (<span class="literal">NULL</span>, buffer, bufferLength,  kCFStringEncodingASCII, <span class="literal">FALSE</span>);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// You must obtain a remote message port by name.</span></span><br><span class="line">        messagePort = <span class="built_in">CFMessagePortCreateRemote</span>(<span class="literal">NULL</span>, (<span class="built_in">CFStringRef</span>)threadPortName);</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (messagePort) &#123;</span><br><span class="line">            <span class="comment">// Retain and save the thread’s comm port for future reference.</span></span><br><span class="line">            AddPortToListOfActiveThreads(messagePort);</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// Since the port is retained by the previous function, release it here</span></span><br><span class="line">            <span class="built_in">CFRelease</span>(messagePort);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// Clean up.</span></span><br><span class="line">        <span class="built_in">CFRelease</span>(threadPortName);</span><br><span class="line">        <span class="built_in">CFAllocatorDeallocate</span>(<span class="literal">NULL</span>, buffer);</span><br><span class="line">    &#125;  <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Process other messages.</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置好主线程之后，剩下的事就是新创建的工作线程创建自己的端口并签入。Listing 3-19 展示了工作线程的入口点函数。该函数提取主线程的端口名称，并使用它创建一个返回到主线程的远程连接。然后，该函数为自己创建一个本地端口，将端口安装在远程的 RunLoop 上，并向主线程发送包含本地端口名称的签入消息。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">OSStatus ServerThreadEntryPoint(<span class="keyword">void</span>* param) &#123;</span><br><span class="line">    <span class="comment">// Create the remote port to the main thread.</span></span><br><span class="line">    <span class="built_in">CFMessagePortRef</span> mainThreadPort;</span><br><span class="line">    <span class="built_in">CFStringRef</span> portName = (<span class="built_in">CFStringRef</span>)param;</span><br><span class="line">    </span><br><span class="line">    mainThreadPort = <span class="built_in">CFMessagePortCreateRemote</span>(<span class="literal">NULL</span>, portName);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Free the string that was passed in param.</span></span><br><span class="line">    <span class="built_in">CFRelease</span>(portName);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Create a port for the worker thread.</span></span><br><span class="line">    <span class="built_in">CFStringRef</span> myPortName = <span class="built_in">CFStringCreateWithFormat</span>(<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="built_in">CFSTR</span>(<span class="string">&quot;com.MyApp.Thread-%d&quot;</span>), <span class="built_in">MPCurrentTaskID</span>());</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Store the port in this thread’s context info for later reference.</span></span><br><span class="line">    <span class="built_in">CFMessagePortContext</span> context = &#123;<span class="number">0</span>, mainThreadPort, <span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>&#125;;</span><br><span class="line">    Boolean shouldFreeInfo;</span><br><span class="line">    Boolean shouldAbort = <span class="literal">TRUE</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">CFMessagePortRef</span> myPort = <span class="built_in">CFMessagePortCreateLocal</span>(<span class="literal">NULL</span>, myPortName, &amp;ProcessClientRequest, &amp;context, &amp;shouldFreeInfo);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (shouldFreeInfo) &#123;</span><br><span class="line">        <span class="comment">// Couldn&#x27;t create a local port, so kill the thread.</span></span><br><span class="line">        <span class="built_in">MPExit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">CFRunLoopSourceRef</span> rlSource = <span class="built_in">CFMessagePortCreateRunLoopSource</span>(<span class="literal">NULL</span>, myPort,</span><br><span class="line">    <span class="keyword">if</span> (!rlSource) &#123;</span><br><span class="line">        <span class="comment">// Couldn&#x27;t create a local port, so kill the thread.</span></span><br><span class="line">        <span class="built_in">MPExit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Add the source to the current run loop.</span></span><br><span class="line">    <span class="built_in">CFRunLoopAddSource</span>(<span class="built_in">CFRunLoopGetCurrent</span>(), rlSource, kCFRunLoopDefaultMode);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Once installed, these can be freed.</span></span><br><span class="line">    <span class="built_in">CFRelease</span>(myPort);</span><br><span class="line">    <span class="built_in">CFRelease</span>(rlSource);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Package up the port name and send the check-in message.</span></span><br><span class="line">    <span class="built_in">CFDataRef</span> returnData = <span class="literal">nil</span>;</span><br><span class="line">    <span class="built_in">CFDataRef</span> outData;</span><br><span class="line">    <span class="built_in">CFIndex</span> stringLength = <span class="built_in">CFStringGetLength</span>(myPortName);</span><br><span class="line">    <span class="built_in">UInt8</span>* buffer = <span class="built_in">CFAllocatorAllocate</span>(<span class="literal">NULL</span>, stringLength, <span class="number">0</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">CFStringGetBytes</span>(myPortName, <span class="built_in">CFRangeMake</span>(<span class="number">0</span>,stringLength),</span><br><span class="line">    kCFStringEncodingASCII, <span class="number">0</span>, <span class="literal">FALSE</span>, buffer, stringLength, <span class="literal">NULL</span>);</span><br><span class="line"> </span><br><span class="line">    outData = <span class="built_in">CFDataCreate</span>(<span class="literal">NULL</span>, buffer, stringLength);</span><br><span class="line"> </span><br><span class="line">    <span class="built_in">CFMessagePortSendRequest</span>(mainThreadPort, kCheckinMessage, outData, <span class="number">0.1</span>, <span class="number">0.0</span>, <span class="literal">NULL</span>, <span class="literal">NULL</span>);</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// Clean up thread data structures.</span></span><br><span class="line">    <span class="built_in">CFRelease</span>(outData);</span><br><span class="line">    <span class="built_in">CFAllocatorDeallocate</span>(<span class="literal">NULL</span>, buffer);</span><br><span class="line"> </span><br><span class="line">    <span class="comment">// Enter the run loop.</span></span><br><span class="line">    <span class="built_in">CFRunLoopRun</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一旦进入 RunLoop，所有发送到远程端口的未来事件都由 ProcessClientRequest 函数处理。该函数的实现取决于线程所做的工作类型，这里没有显示。</p>
+<hr>
+<h1 id="同步"><a href="#同步" class="headerlink" title="同步"></a>同步</h1><p>应用程序中多个线程的存在可能导致安全访问来自多个执行线程的资源的问题。修改相同资源的两个线程可能会以意想不到的方式互相干扰。例如，一个线程可能覆盖另一个线程的更改，或者将应用置于未知且可能无效的状态。幸运的话，损坏的资源可能会导致明显的性能问题或崩溃，这些问题容易跟踪和修复。但是，如果你运气不好，这种损坏可能会导致一些细微的错误，这些错误直到很久以后才会显示出来，或者这些错误可能需要对底层编码进行大量的检查。</p>
+<p>谈到线程安全，一个好的设计是你拥有的最佳保护。避免资源共享并最小化线程之间的交互，可以减少这些线程相互干扰的可能性。然而，完全无干扰的设计并不总是可能的。在你的线程必须交互的情况下，你需要使用同步工具来确保他们交互时是安全的。</p>
+<p>OS X 和 iOS 提供了许多同步工具供您使用，从提供互斥访问的工具到正确排列应用中事件顺序的工具。下面的部分将描述这些工具，以及如何在代码中使用它们来影响对程序资源的安全访问。</p>
+<h2 id="同步工具-1"><a href="#同步工具-1" class="headerlink" title="同步工具"></a>同步工具</h2><p>为了防止不同的线程意外地更改数据，可以将应用设计为不存在同步问题，也可以使用同步工具。尽管完全避免同步问题的可取的，但这并不总是可能的。下面几节描述可供你使用的同步工具的基本类别。</p>
+<h3 id="原子操作"><a href="#原子操作" class="headerlink" title="原子操作"></a>原子操作</h3><p>原子操作是对简单数据类型进行同步的一种简单形式。原子操作的好处是他们不会阻塞竞争线程。对于简单的操作，例如递增计数器变量，这可以比获取锁带来更好的性能。</p>
+<p>OS X 和 iOS 包含许多操作，可以对 32 位和 64 位值执行基本的数学和逻辑操作。这些操作中包括 compare-and-swap, test-and-set, and test-and-clear 操作的原子版本。有关支持的原子操作列表，参见 /usr/include/libkern/OSAtomic.h 头文件或原子手册页</p>
+<h3 id="内存屏障和-Volatile-变量"><a href="#内存屏障和-Volatile-变量" class="headerlink" title="内存屏障和 Volatile 变量"></a>内存屏障和 Volatile 变量</h3><p>为了达到最佳性能，编译器经常对程序 assembly-level 指令进行重新排序，以使处理器的指令通道尽可能地满。作为优化的一部分，当编译器认为访问主内存不会生成不正确的数据时，它可能会重新排序访问主内存的指令。不幸的是，编译器并不总是能够检测到所有与内存相关的操作。如果看似独立的变量实际上相互影响，编译器优化可能会以错误的顺序更新这些变量，从而产生可能不正确的结果。</p>
+<p>内存屏障是一种非阻塞同步工具，用于确保内存操作以正确的顺序发生。内存屏障的作用类似于一个栅栏，强制处理器先执行完屏障前面的所有存取操作，再执行屏障后的。内存屏障通常用于确保一个线程（但对另一线程可见）的内存操作按照预期顺序进行。在这种情况下，缺少内存屏障可能会使其他线程看到看似不可能的结果。要使用内存屏障，只需在代码中适当的位置调用 OSMemoryBarrier 函数。</p>
+<p>易失性变量对单个变量应用另一种类型的内存约束。编译器通常将变量的值加载到寄存器来优化代码。对于局部变量，这通常不是问题。但是，如果变量在另一线程中可见，这样的优化可能会阻止另一线程注意到对它的任何修改。将 volatile 关键字应用于变量迫使编译器在每次使用该变量时从内存中加载该变量。如果一个变量的值可以在任何时候被编译器无法检测到的外部源更改，则可以将变量声明为 volatile。</p>
+<p>因为内存屏障和易失性变量都减少了编译器可以执行的优化代码数量，所以应该谨慎使用它们，并且只在需要确保正确性的地方使用。有关使用内存屏障的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/OSMemoryBarrier.3.html#//apple_ref/doc/man/3/OSMemoryBarrier">《OSMemoryBarrier》</a> 手册页。</p>
+<h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><p>锁是最常用的同步工具之一。你可以使用锁来保护代码的一个关键部分，即每次只允许一个线程访问的代码段。例如，一个临界区可能操作一个特定的数据结构，或者使用某个资源一次最多支持一个客户机。通过再次部分周围放置锁，可以排除其他线程进行可能影响代码正确定的更改。</p>
+<p>Table 4-1 列出了程序员常用的一些锁。OS X 和 iOS 为大多数锁类型提供了实现，但不是所有锁类型。对于不支持的锁类型，描述列解释了为什么这些所不能在平台上直接实现</p>
+<table>
+<thead>
+<tr>
+<th>Lock</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>互斥锁</td>
+<td>互斥锁充当资源周围的保护屏障。互斥量是一种信号量，每次只允许访问一个线程。如果正在使用互斥锁，而另一个线程试图获取互斥锁，则该线程将阻塞，直到互斥锁被其原始持有者释放。如果多个线程争用同一个互斥对象，每次只允许一个线程访问它。</td>
+</tr>
+<tr>
+<td>递归锁</td>
+<td>递归锁是互斥锁的变体。递归锁允许一个线程在释放锁之前多次获取锁。其他线程仍然被阻塞，直到锁的所有者释放锁的次数与获取锁的次数相同。递归锁主要用于递归迭代期间，但也可以用于多个方法需要分别获取锁的情况。</td>
+</tr>
+<tr>
+<td>读写锁</td>
+<td>读写锁也称为共享独占锁。这种类型的锁通常用于更大规模的操作，如果频繁读取受保护的数据结构只偶尔修改，则可以显著提高性能。在正常运行中，多个阅读器可以同时访问数据结构。但是，当线程想要写入结构时，它会阻塞，直到所有的读取器释放锁，此时它获得锁并可以更新结构。当写线程等待锁时，新的读线程阻塞，直到写线程完成。系统只支持使用 POSIX 线程的读写锁，有关如何使用这些锁的更多信息，参见 《pthread》</td>
+</tr>
+<tr>
+<td>分布式锁</td>
+<td>分布式锁在进程级提供互斥访问。与真正的互斥锁不同，分布式锁不会阻塞进程或阻止进程运行。它只报告锁合适处于忙碌状态，并让进程决定如何继续。</td>
+</tr>
+<tr>
+<td>自旋锁</td>
+<td>自旋锁反复轮询其锁条件，直到该条件变为真。自旋锁通常用于多处理器系统，其中锁的预期等待时间较小。在这种情况下，轮询通常比阻塞线程更有效，这设计上下文的切换和线程数据结构的更新。由于自旋锁的轮询特性，系统不提供任何自旋锁的实现，但是你可以在特定的情况下轻松实现它们。有关在内核中实现自旋锁的信息，参见 《Kernel Programming Guide》。</td>
+</tr>
+<tr>
+<td>双重检查锁</td>
+<td>双重检查锁是一种尝试，通过在获取锁之前测试锁定条件来减少获取锁的开销。由于双重检查锁可能是不安全的，所以系统不提供对它们的显式支持，并且不鼓励使用它们。</td>
+</tr>
+</tbody></table>
+<p>更多关于使用锁的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-SW16">《Using Locks》</a>。</p>
+<h3 id="条件"><a href="#条件" class="headerlink" title="条件"></a>条件</h3><p>条件是另一种类型的信号量，它允许线程在某个条件为真时互相发送信号。条件通常用于指示资源的可用性，或确保以特定的顺序执行任务。当线程测试一个条件时，它会阻塞，除非该条件已经为真。它仍然被阻塞，直到其他线程显式地更改并发出条件信号。条件和互斥锁的区别在于，可以允许多个线程同时访问条件。这个条件更像一个看门人，它允许不同的线程根据某些特定的条件通过这个门。</p>
+<p>使用条件的一种方法是管理挂起事件池。当队列中有事件时，事件队列将使用一个条件变量来通知等待线程。如果一个事件到达，队列将适当地发出条件信号。如果一个线程已经在等待，它将被唤醒，然后从队列中取出事件并处理它。如果两个事件几乎同时进入队列，队列将两次向该条件发出信号，以唤醒两个线程。</p>
+<p>该系统支持集中不同技术中的条件。然而，条件的正确实现需要仔细编码，所以在将条件用于自己的代码之前，应该先查看使用条件的示例。</p>
+<h3 id="执行选择器例程"><a href="#执行选择器例程" class="headerlink" title="执行选择器例程"></a>执行选择器例程</h3><p>Cocoa 应用程序以一种方便的方式将消息以同步的方式传递到一个线程。NSObject 类声明了在应用程序的一个活动线程上执行选择器的方法。这些方法允许线程异步传递消息，并保证目标线程将同步执行这些消息。例如，可以使用执行选择器消息将分布式计算的结果传递给应用的主线程或指定的协调器进程。执行选择器的每个请求都在目标线程的 RunLoop 中排队，然后按接收请求的顺序处理请求。</p>
+<p>有关执行选择器例程的摘要和有关如何使用它们的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW44">《Cocoa Perform Selector Sources》</a></p>
+<h2 id="同步消耗和性能"><a href="#同步消耗和性能" class="headerlink" title="同步消耗和性能"></a>同步消耗和性能</h2><p>同步有助于确保代码的正确性，但这是以性能为代价的。使用同步工具会导致延迟，即使在没有争用的情况下也是如此。锁和原子操作通常涉及使用内存屏障和内核级同步，以确保代码得到适当的保护。如果存在锁争用，你的线程可能会阻塞并经历更大的延迟。</p>
+<p>Table 4-2 列出了无争用情况下互斥锁和原子操作相关的一些近似成本。这些测量代表了超过几千个样本的平均时间。但是，与线程创建时间一样，互斥锁获取时间（即使在没有争用的情况下）也可能会根据处理器负载、计算机的速度以及可用系统和程序内存的数量发生很大的变化</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Approximate cost</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>互斥锁获取时间</td>
+<td>约 0.2ms</td>
+<td>这是无争用情况下的锁获取时间。如果锁由另一个线程持有，则获取时间可能要长得多。</td>
+</tr>
+<tr>
+<td>原子比较和交换</td>
+<td>约 0.05ms</td>
+<td>这是无争用情况下的比较和交互时间。</td>
+</tr>
+<tr>
+<td>当你设计你的并发任务时，正确性永远是最重要的因素，但是你也应该考虑性能因素。正确的并发代码性能不如同样的代码单线程执行的话，很难说是一种增进。</td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p>在设计并发任务时，正确性始终是最重要的因素，但是你还应该考虑性能因素。在多个线程下正确执行的代码，但是比在单个线程下运行相同代码要慢，这几乎算不上什么改进。</p>
+<p>如果你正在对现有的单线程应用进行改造，你应该始终对关键任务的性能进行一组基线测量。在添加额外的线程之后，你应该对这些相同的任务进行新的度量，并比较多线程用例和单线程用例的性能。如果在优化代码之后，线程并不能提高性能，那么你可能需要重新考虑特定的实现和线程的使用。</p>
+<p>有关性能和用于收集指标的工具的信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Performance/Conceptual/PerformanceOverview/Introduction/Introduction.html#//apple_ref/doc/uid/TP40001410">《Performance Overview》</a>。有关锁和原子操作成本的具体信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/CreatingThreads.html#//apple_ref/doc/uid/10000057i-CH15-SW7">《Thread Costs》</a>。</p>
+<h2 id="线程安全和信号"><a href="#线程安全和信号" class="headerlink" title="线程安全和信号"></a>线程安全和信号</h2><p>涉及到线程应用时，没有什么比处理信号的问题更令人恐惧或困惑了。信号是一种低级的 BSD 机制，可用于向进程传递信息活以某种方式操纵它。有些程序使用信号来检测某些事件，比如子进程的死亡。系统使用信号来终止失控的进程，并与其他类型的信息通信。</p>
+<p>信号的问题不是他们做什么，而是当应用有多个线程时他们的行为。在单线程应用中，所有信号处理程序都在主线程上运行。在多线程应用中，没有绑定到特定硬件错误（例如非法指令）的信号被传递到正在运行的任何线程。如果多个线程同时运行，则将信号传递给系统碰巧选择的那个进程。换句话说，信号可以传递到应用的任何线程。</p>
+<p>在应用中实现信号处理的第一条规则是避免假设哪个线程正在处理信号。如果一个特定的线程想要处理一个给定的信号，你需要想办法在信号到达时通知该线程。你不能仅仅假设从该线程安装信号处理程序导致信号被传递到同一个线程。</p>
+<p>有关信号和安装信号处理程序的更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/signal.3.html#//apple_ref/doc/man/3/signal">《signal》</a> 和 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/sigaction.2.html#//apple_ref/doc/man/2/sigaction">《sigaction》</a> 手册页。</p>
+<h2 id="线程安全设计的技巧"><a href="#线程安全设计的技巧" class="headerlink" title="线程安全设计的技巧"></a>线程安全设计的技巧</h2><p>同步工具是使代码线程安全的一种有用办法，但他们不是万能药。使用过多的锁和其他类型的同步原语实际上会降低应用的线程性能，而非非线程性能。在安全和性能之间找到正确的平衡是一门需要经验的艺术。一下部分提供一些技巧，帮助你为应用选择适当的同步级别</p>
+<h3 id="完全避免同步"><a href="#完全避免同步" class="headerlink" title="完全避免同步"></a>完全避免同步</h3><p>对于你所从事的任何新项目，甚至对于现有的项目，设计代码和数据结构以避免同步是最好的解决方案。虽然锁和同步工具很有用，但他们确实会影响任何应用的性能。如果总体设计导致特定资源之间的高争用，线程可能会等待更长的时间。</p>
+<p>实现并发的最佳方法是减少并发任务之间的交互和相互依赖。如果每个任务都在自己的私有数据集上操作，啧不需要使用锁来保护该数据。即使在两个任务确实共享一个公共数据集的情况下，你也可以查看对该数据集进行分区的办法，或者每个任务提供它自己的副本。当然，复制数据集也有其成本，所以在做出决定之前，你必须将这些成本与同步成本进行权衡。</p>
+<h3 id="了解同步的限制"><a href="#了解同步的限制" class="headerlink" title="了解同步的限制"></a>了解同步的限制</h3><p>只有当应用中所有线程一致地使用同步工具时，它们才是有效的。如果你创建一个互斥锁来限制对特定资源的访问，那么所有线程在尝试操作该资源之前必须获得该资源之前获得相同的互斥锁。不这样做会破坏互斥锁提供的保护，这是程序员的错误。</p>
+<h3 id="注意代码正确性的威胁"><a href="#注意代码正确性的威胁" class="headerlink" title="注意代码正确性的威胁"></a>注意代码正确性的威胁</h3><p>使用锁和内存屏障时，应该始终仔细考虑他们在代码中的位置。即使是看起来位置很好的锁，实际上也会让你产生一种虚假的安全感。下面一系列示例试图通过指出看似无害的代码中的缺陷来说明这个问题。基本前提是有一个包含一组不可变对象的可变数组。假设你想调用数组中第一个对象的方法。你可以使用以下代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSLock</span>* arrayLock = GetArrayLock();</span><br><span class="line"><span class="built_in">NSMutableArray</span>* myArray = GetSharedArray();</span><br><span class="line"><span class="keyword">id</span> anObject;</span><br><span class="line"></span><br><span class="line">[arrayLock lock];</span><br><span class="line">anObject = [myArray objectAtIndex:<span class="number">0</span>];</span><br><span class="line">[arrayLock unlock];</span><br><span class="line"></span><br><span class="line">[anObject doSomething];</span><br></pre></td></tr></table></figure>
+
+<p>由于数组是可变的，所以数组周围的锁会阻止其他线程修改数组，直到得到所需的对象。由于检索的对象本身是不可变的，所以在调用 <code>doSomething</code> 方法时不需要使用锁。</p>
+<p>不过上面的例子就有一个问题。如果在有机会执行 <code>doSomething </code>方法之前释放锁，另一个线程进来并从数组中删除所有对象，会发生什么？在没有垃圾收集的应用程序中，你的代码所持有的对象可能被释放，留下一个指向无效内存地址的对象。为了解决这个问题，你可能需要重新排列现有的代码，并调用 <code>doSomething</code> 之后释放锁，如下所示：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSLock</span>* arrayLock = GetArrayLock();</span><br><span class="line"><span class="built_in">NSMutableArray</span>* myArray = GetSharedArray();</span><br><span class="line"><span class="keyword">id</span> anObject;</span><br><span class="line"></span><br><span class="line">[arrayLock lock];</span><br><span class="line">anObject = [myArray objectAtIndex:<span class="number">0</span>];</span><br><span class="line">[anObject doSomething];</span><br><span class="line">[arrayLock unlock];</span><br></pre></td></tr></table></figure>
+
+<p>通过在锁中移动 <code>doSomething</code> 调用，代码可以确保在调用方法时对象仍然有效。不幸的是，如果 <code>doSomething</code> 需要很长时间执行，这可能会导致代码长时间持有锁，从而造成性能瓶颈。</p>
+<p>代码的问题不是关键区域定义得不好，而是没有理解实际的问题。真正的问题是内存管理问题，它只由其他线程的存在触发。因为它可以由另一个线程释放，所以更好的解决方案是在释放锁之前保留一个对象。这个解决方案解决了释放对象的实际问题，并且没有引入潜在的性能损失。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSLock</span>* arrayLock = GetArrayLock();</span><br><span class="line"><span class="built_in">NSMutableArray</span>* myArray = GetSharedArray();</span><br><span class="line"><span class="keyword">id</span> anObject;</span><br><span class="line">  </span><br><span class="line">[arrayLock lock];</span><br><span class="line">anObject = [myArray objectAtIndex:<span class="number">0</span>];</span><br><span class="line">[anObject <span class="keyword">retain</span>];</span><br><span class="line">[arrayLock unlock];</span><br><span class="line">[anObject doSomething];</span><br><span class="line">[anObject release];  </span><br></pre></td></tr></table></figure>
+
+<p>虽然前面的例子本质上很简单，但他们确实说明了一个非常重要的问题。说到正确性，你必须超越那些显而易见的问题。内存管理和设计的其他方面也可能受到多线程的影响，所以你必须预先考虑这些问题。此外，你应该始终假设编译器在安全性方面会做最坏的事情。这种意识和警惕性应该帮助你避免潜在的问题，并确保你的代码行为正确。</p>
+<p>有关如何使程序线程安全的更多示例，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafetySummary/ThreadSafetySummary.html#//apple_ref/doc/uid/10000057i-CH12-SW1">《Thread Safety Summary》</a></p>
+<h3 id="注意死锁和活锁"><a href="#注意死锁和活锁" class="headerlink" title="注意死锁和活锁"></a>注意死锁和活锁</h3><p>当一个线程试图同时获取多个锁时，可能会发生死锁。当两个不同的线程持有另一个线程需要的锁，然后试图获取另一个线程持有的锁时，就会发生死锁。结果是，每个进程都永久阻塞，因为他们永远无法获得另一个锁。</p>
+<p>活锁类似于死锁，当两个线程竞争同一组资源时发生死锁。在活锁的情况下，线程放弃第一个锁，试图获得第二个锁，它将返回并在此尝试获得第一个锁。它锁定是因为它把所有的时间都花在释放一个锁并试图获得另一个锁上，而不是做任何实际的工作。</p>
+<p>避免死锁和活锁的最佳方案是一次只使用一个锁。如果必须一次获得多个锁，则应确保其他线程不会做类似的事情。</p>
+<h3 id="正确使用-Volatile-变量"><a href="#正确使用-Volatile-变量" class="headerlink" title="正确使用 Volatile 变量"></a>正确使用 Volatile 变量</h3><p>如果你已经使用互斥锁来保护一段代码，不要自动假设你需要使用 volatile 关键字来保护该部分中的重要变量。互斥锁包含一个内存屏障，以确保负载和存储操作的正确顺序。将 volatile 关键字添加到临界段中的变量中，将强制在每次访问该值时从内存中添加该值。在特定的情况下，这两种同步技术的组合是必要的，但也会导致显著的性能损失。如果仅互斥量就足以保护变量。则忽略 volatile 关键字。</p>
+<p>同样重要的是，不要为了避免使用互斥对象而使用 volatile 变量。通常，互斥锁和其他同步机制是比 volatile 变量更好的保护数据结构完整性的方法。volatile 关键字只确保从内存中加载变量，而不是存储在寄存器中。它不能确保你的代码正确地访问变量。</p>
+<h2 id="使用原子操作"><a href="#使用原子操作" class="headerlink" title="使用原子操作"></a>使用原子操作</h2><p>非阻塞同步是执行某些类型的操作并避免锁开销的一种方法。虽然锁是同步两个线程的有效方法，但是获取锁是一个相对昂贵的操作，即使在没有争用的情况下也是如此。相比之下，许多原子操作只需要一部分时间就可以完成，而且与锁一样有效。</p>
+<p>原子操作允许你对 32 位或 64 位值执行简单的数学和逻辑操作。这些操作依赖于特殊的硬件指令（和一个可选的内存屏障），以确保在再次访问受影响的内存之前完成给定的操作。在多线程情况下，应该始终使用包含内存屏障的原子操作，以确保在线程之间正确地同步内存。</p>
+<p>Table 4-3 列出了可用的原子数学和逻辑操作以及相应的函数名。这些函数都在 /usr/include/libkern/OSAtomic.h 头文件中声明，你还可以在其中找到完整的语法。这些函数的 64 位版本只能在 64 位进程中可用。</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Funcation name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Add</td>
+<td>OSAtomicAdd32<br />OSAtomicAdd32Barrier<br /> OSAtomicAdd64<br /> OSAtomicAdd64Barrier</td>
+<td>将两个整数相加，并保存结果到指定的变量</td>
+</tr>
+<tr>
+<td>Increment</td>
+<td>OSAtomicIncrement32<br />OSAtomicIncrement32Barrier<br />OSAtomicIncrement64<br />OSAtomicIncrement64Barrier</td>
+<td>将指定的整数加 1</td>
+</tr>
+<tr>
+<td>Decrement</td>
+<td>OSAtomicDecrement32 <br />OSAtomicDecrement32Barrier <br />OSAtomicDecrement64<br />OSAtomicDecrement64Barrier</td>
+<td>将指定的整数减 1</td>
+</tr>
+<tr>
+<td>Logical OR</td>
+<td>OSAtomicOr32<br />OSAtomicOr32Barrier</td>
+<td>将指定的 32 bit 值与一个 32 bit mask 做 OR 操作</td>
+</tr>
+<tr>
+<td>Logical AND</td>
+<td>OSAtomicAnd32 <br />OSAtomicAnd32Barrier</td>
+<td>将指定的 32 bit 值与一个 32 bit mask 做 AND 操作</td>
+</tr>
+<tr>
+<td>Logical XOR</td>
+<td>OSAtomicXor32<br />OSAtomicXor32Barrier</td>
+<td>将指定的 32 bit 值与一个 32 bit mask 做 XOR 操作</td>
+</tr>
+<tr>
+<td>Compare and swap</td>
+<td>OSAtomicCompareAndSwap32<br />OSAtomicCompareAndSwap32Barrier<br />OSAtomicCompareAndSwap64<br />OSAtomicCompareAndSwap64Barrier<br />OSAtomicCompareAndSwapPtr<br />OSAtomicCompareAndSwapPtrBarrier<br />OSAtomicCompareAndSwapInt<br />OSAtomicCompareAndSwapIntBarrier<br />OSAtomicCompareAndSwapLong<br />OSAtomicCompareAndSwapLongBarrier</td>
+<td>将指定的值与一个 old value 作比较，如果相等，函数将 new value 赋给指定变量；不是的话，啥也不做。比较和赋值是作为一个原子操作完成的，返回返回一个 boolean 值表示 swap 是否发生</td>
+</tr>
+<tr>
+<td>test and set</td>
+<td>OSAtomicTestAndSet<br />OSAtomicTestAndSetBarrier</td>
+<td>Tests a bit in the specified variable, sets that bit to 1, and returns the value of the old bit as a Boolean value. Bits are tested according to the formula (0x80&gt;&gt;(n&amp;7))of byte ((char*)address + (n &gt;&gt; 3)) where n is the bit number and address is a pointer to the variable. This formula effectively breaks up the variable into 8-bit sized chunks and orders the bits in each chunk in reverse. For example, to test the lowest-order bit (bit 0) of a 32-bit integer, you would actually specify 7 for the bit number; similarly, to test the highest order bit (bit 32), you would specify 24 for the bit number.</td>
+</tr>
+<tr>
+<td>test and clear</td>
+<td>OSAtomicTestAndClear<br />OSAtomicTestAndClearBarrier</td>
+<td>Tests a bit in the specified variable, sets that bit to 0, and returns the value of the old bit as a Boolean value. Bits are tested according to the formula (0x80&gt;&gt;(n&amp;7))of byte ((char*)address + (n &gt;&gt; 3)) where n is the bit number and address is a pointer to the variable. This formula effectively breaks up the variable into 8-bit sized chunks and orders the bits in each chunk in reverse. For example, to test the lowest-order bit (bit 0) of a 32-bit integer, you would actually specify 7 for the bit number; similarly, to test the highest order bit (bit 32), you would specify 24 for the bit number.</td>
+</tr>
+</tbody></table>
+<p>大多数原子函数的行为应该相对简单，并且符合你的期望。然而，Listing 4-1 显示了原子测试和设置以及比较和交换操作的行为，这些操作稍微复杂一些。对 OSAtomicTestAndSet 函数的前三个调用演示了如何对整数值使用位的操作公式，其结果可能与你的期望不同。最后两个调用显示 OSAtomicCompareAndSwap32 函数的行为。在所有情况下，当没有其他线程操作这些值时，在无争用的情况下调用这些函数</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">int32_t  theValue = <span class="number">0</span>;</span><br><span class="line">OSAtomicTestAndSet(<span class="number">0</span>, &amp;theValue);</span><br><span class="line"><span class="comment">// theValue is now 128.</span></span><br><span class="line">  </span><br><span class="line">theValue = <span class="number">0</span>;</span><br><span class="line">OSAtomicTestAndSet(<span class="number">7</span>, &amp;theValue);</span><br><span class="line"><span class="comment">// theValue is now 1.</span></span><br><span class="line">  </span><br><span class="line">theValue = <span class="number">0</span>;</span><br><span class="line">OSAtomicTestAndSet(<span class="number">15</span>, &amp;theValue)</span><br><span class="line"><span class="comment">// theValue is now 256.</span></span><br><span class="line">  </span><br><span class="line">OSAtomicCompareAndSwap32(<span class="number">256</span>, <span class="number">512</span>, &amp;theValue);</span><br><span class="line"><span class="comment">// theValue is now 512.</span></span><br><span class="line">  </span><br><span class="line">OSAtomicCompareAndSwap32(<span class="number">256</span>, <span class="number">1024</span>, &amp;theValue);</span><br><span class="line"><span class="comment">// theValue is still 512.</span></span><br></pre></td></tr></table></figure>
+<p>更多关于原子操作的信息，见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/atomic.3.html#//apple_ref/doc/man/3/atomic">《automic》</a> 手册页和 /usr/include/libkern/OSAtomic.h 头文件。</p>
+<h2 id="使用锁"><a href="#使用锁" class="headerlink" title="使用锁"></a>使用锁</h2><p>锁是线程编程的基本同步工具。锁使你能够轻松地保护大量代码，从而确保代码的正确性。OS X 和 iOS 为所有应用类型提供了基本的互斥锁，基础框架为特殊情况定义了互斥锁的一些附加变体。下面几节将向你展示如何使用这些锁类型中的几种。</p>
+<h3 id="使用-POSIX-互斥锁"><a href="#使用-POSIX-互斥锁" class="headerlink" title="使用 POSIX 互斥锁"></a>使用 POSIX 互斥锁</h3><p>POSIX 互斥锁在任何应用中都非常容易使用。要创建互斥锁，需要声明并初始化 <code>pthread_mutex_t</code> 结构。要锁定和解锁互斥锁，可以使用 <code>pthread_mutex_lock</code> 和 <code>pthread_mutex_unlock</code> 函数。Listing 4-2 显示了初始化和使用 POSIX 线程互斥锁所需的基本代码。完成锁定之后，只需调用 pthread_mutex_destroy 来释放锁定数据结构。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">pthread_mutex_t mutex;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> MyInitFunction() &#123;</span><br><span class="line">    pthread_mutex_init(&amp;mutex, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> MyLockingFunction() &#123;</span><br><span class="line">    pthread_mutex_lock(&amp;mutex);</span><br><span class="line">    <span class="comment">// Do work.</span></span><br><span class="line">    pthread_mutex_unlock(&amp;mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>: 上面的代码比较简单，主要是为了说明 POSIX thread mutex 函数的用法。你自己的代码应该检查返回的 error code，并相应的处理它们。</p>
+</blockquote>
+<h3 id="使用-NSLock-类"><a href="#使用-NSLock-类" class="headerlink" title="使用 NSLock 类"></a>使用 NSLock 类</h3><p>NSLock 对象为 Cocoa 应用实现一个基本互斥。所有锁（包括 NSLock）的接口实际上是由 NSLock 协议定义的，它定义了锁和解锁方法。你使用这些方法来获取和释放锁，就像使用任何互斥锁一样。</p>
+<p>除了标准的锁定行为，<code>NSLock</code> 类还添加了 <code>tryLock </code>和 <code>lockBeforeDate:</code> 方法。tryLock 方法尝试获取锁，但如果锁不可用，则不会阻塞；相反，该方法只返回 NO。方法尝试获取锁，但是如果在指定的时间限制内没有获取锁，则会解锁线程（并返回 NO）。</p>
+<p>下面的示例展示了如何使用 NSLock 对象来协调可视化显示的更新，可视化显示的数据由多个线程计算。如果线程不能立即获取锁，它只需要继续计算，直到能够获取锁并更新显示。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">BOOL</span> moreToDo = <span class="literal">YES</span>;</span><br><span class="line"><span class="built_in">NSLock</span> *theLock = [[<span class="built_in">NSLock</span> alloc] init];</span><br><span class="line">...</span><br><span class="line"><span class="keyword">while</span> (moreToDo) &#123;</span><br><span class="line">    <span class="comment">/* Do another increment of calculation */</span></span><br><span class="line">    <span class="comment">/* until there’s no more to do. */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> ([theLock tryLock]) &#123;</span><br><span class="line">        <span class="comment">/* Update display used by all threads. */</span></span><br><span class="line">        [theLock unlock];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-synchronized-指令"><a href="#使用-synchronized-指令" class="headerlink" title="使用 @synchronized 指令"></a>使用 @synchronized 指令</h3><p><code>@synchronized</code> 指令是在 Objective-C 代码中动态创建互斥锁的一种方便的方法。@synchronized 指令执行任何其他互斥锁都会执行的操作——它防止不同的线程同时获得相同的锁。但是，在这种情况下，你不必直接创建互斥对象或锁对象。相反，你只需使用任何 Objective-C 对象作为锁令牌，如下面的示例所示：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)myMethod:(<span class="keyword">id</span>)anObj &#123;</span><br><span class="line">    <span class="keyword">@synchronized</span>(anObj) &#123;</span><br><span class="line">        <span class="comment">// Everything between the braces is protected by the @synchronized directive.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>传递给 @synchronized 指令的对象是一个唯一标识符，用于区分受保护的块。如果你在两个不同的线程中执行上述方法，并在每个线程上传递 anObj 参数的不同对象，那么每个线程都会获得自己的锁并继续处理，而不会被另一个线程阻塞。那么，如果在这两种情况下传递相同的对象，其中一个线程将首先获得锁，另一个线程将阻塞，直到第一个线程完成临界区。</p>
+<p>作为预防措施，@synchronized 块隐式地将异常处理程序添加到受保护的代码中。这个处理程序在抛出异常时自动释放互斥体。这意味着为了使用 @synchronized 指令，你还必须在代码中启用 Objective-C 异常处理。如果不希望隐式异常处理程序造成额外的开销，则应该考虑使用锁类。</p>
+<p>关于 @synchronized 指令的更多信息，参见 《The Objective-C Programming Language》。</p>
+<h3 id="使用其他-Cocoa-锁"><a href="#使用其他-Cocoa-锁" class="headerlink" title="使用其他 Cocoa 锁"></a>使用其他 Cocoa 锁</h3><p>下面的部分描述了使用其它不同类型 Cocoa lock 的方法。</p>
+<h4 id="使用-NSRecursiveLock-对象"><a href="#使用-NSRecursiveLock-对象" class="headerlink" title="使用 NSRecursiveLock 对象"></a>使用 NSRecursiveLock 对象</h4><p>NSRecursiveLock 类定义了一个锁，该锁可以由一个线程多次获得，而不会导致线程死锁。递归锁记录成功获取它的次数。每次成功获取锁都必须通过对应的调用来平衡解锁。只有当所有的 lock 和 unlock 调用都平衡时，锁才会被释放，以便其他线程可以获得它。</p>
+<p>顾名思义，这种类型的锁通常用于递归函数中，以防递归阻塞线程。你可以在非递归的情况下类似使用它来调用语义要求他们也接受锁的函数。下面是一个通过递归获得锁的简单递归函数的例子。如果这段代码没有使用 NSRecursiveLock 对象，那么当再次调用该函数时，线程将死锁。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSRecursiveLock</span> *theLock = [[<span class="built_in">NSRecursiveLock</span> alloc] init];</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> MyRecursiveFunction(<span class="keyword">int</span> value) &#123;</span><br><span class="line">    [theLock lock];</span><br><span class="line">    <span class="keyword">if</span> (value != <span class="number">0</span>) &#123;</span><br><span class="line">        --value;</span><br><span class="line">        MyRecursiveFunction(value);</span><br><span class="line">    &#125;</span><br><span class="line">    [theLock unlock];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MyRecursiveFunction(<span class="number">5</span>);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>: 因为在所有 lock 调用都与 unlock 调用平衡之前不会释放递归锁，所以应该仔细权衡使用性能锁的决定和潜在的性能影响。长时间持有任何锁搜可能导致其他线程阻塞，直到递归完成。如果你可以重用代码到消除递归或消除递归锁的需要，那么你可能会获得更好的性能。</p>
+</blockquote>
+<h4 id="使用-NSConditionLock-对象"><a href="#使用-NSConditionLock-对象" class="headerlink" title="使用 NSConditionLock 对象"></a>使用 NSConditionLock 对象</h4><p>NSConditionLock 对象定义了一个互斥锁，它可以用特定的值锁定和解锁。你不应该将这种类型的锁与条件混淆。该行为某种程度上类似于条件，但实现方式非常不同。</p>
+<p>典型地，当线程需要以特定的顺序执行任务时，例如当一个线程生成另一个线程使用的数据时，使用 NSConditionLock 对象。在生产者执行时，它解锁并将锁条件设置为适当的整数值来唤醒消费者线程，然后消费者线程继续处理数据。</p>
+<p>NSConditionLock 对象响应和解锁方法可以在任何组合中使用。例如，你可以将 lock 消息与 unlock 消息进行配对（<code>unlockWithCondition:</code> 或 <code>lockWhenCondition:</code> ）。当然，后一种组合可以解锁，但不会释放任何等待特定条件值的线程。</p>
+<p>下面的示例展示了如何使用条件锁处理生产者-消费者问题。假设应用包含一个数据队列。生产者线程向队列添加数据，消费者线程从队列提取数据。生产者不需要等待特定的条件，但它必须等待锁可用，以便可以安全地将数据添加到队列中。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">id</span> condLock = [[<span class="built_in">NSConditionLock</span> alloc] initWithCondition:NO_DATA];</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">    [condLock lock];</span><br><span class="line">    <span class="comment">/* Add data to the queue. */</span></span><br><span class="line">    [condLock unlockWithCondition:HAS_DATA];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为锁的初始条件被设置为 NO_DATA，所以生产者线程在最初获取锁时应该没有问题。它用数据填充队列并将条件设置为 HAS_DATA。在随后的迭代中，无论队列是空的还是仍然有一些数据，生产者线程都可以在到达时添加新数据。它阻塞的唯一时间是从队列中提取数据的使用者线程。</p>
+<p>因为使用者线程必须处理数据，所以它使用特定的条件在队列中等待。在生产者将数据放入队列时，消费者线程将唤醒并获取其锁。然后，它可以从队列中提取一些数据并更新队列状态。下面的示例显示了使用者线程处理循环的基本结构。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">    [condLock lockWhenCondition:HAS_DATA];</span><br><span class="line">    <span class="comment">/* Remove data from the queue. */</span></span><br><span class="line">    [condLock unlockWithCondition:(isEmpty ? NO_DATA : HAS_DATA)];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Process the data locally.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="NSDistributedLock"><a href="#NSDistributedLock" class="headerlink" title="NSDistributedLock"></a>NSDistributedLock</h4><p>多个主机上的多个应用可以使用 NSDistributedLock 类来限制对某些共享资源的访问，比如文件，锁本身实际上是一个互斥锁，它使用文件系统项（如文件和目录）实现。要使 NSDistributedLock 对象可用，该锁必须可由使用它的所有应用编写。这通常意味着将它放在一个文件系统中，所有运行应用程序的计算机都可以访问文件系统。</p>
+<p>与其他类型的锁不同，NSDistributedLock 不符合 NSLocking 协议，因此没有 lock 方法。锁方法将阻塞线程的执行，并要求系统已预定的速率轮询锁。NSDistributedLock 提供了一个 tryLock 方法，让你决定是否轮询，而不是对你的代码施加这种惩罚。</p>
+<p>因为它是使用文件系统实现的，除非所有者显式地释放它，否则不会释放 NSDistributedLock 对象，如果你的应用在持有分布式锁时崩溃，其他客户机将无法访问受保护的资源。在这种情况下，可以使用 breakLock 方法打破现有的锁，以便获得它。不过，一般应该避免打破锁，除非你确定拥有的锁的进程已经死亡，并且无法释放锁。</p>
+<p>与其他类型的锁一样，当你使用 NSDistributedLock 对象时，你可以通过调用 unlock 方法来释放它。</p>
+<h2 id="使用条件"><a href="#使用条件" class="headerlink" title="使用条件"></a>使用条件</h2><p>条件是一种特殊类型的锁，你可以使用它来同步操作必须进行的顺序。他们与互斥锁有着微妙的区别。等待条件的线程将被阻塞，直到另一个线程显式地发出该条件的信号。</p>
+<p>由于实现操作系统所涉及的微妙差别，即使你的代码实际上没有发出条件锁的信号，也允许条件锁以虚假的成功返回。为了避免这些伪信号引起的问题，你应该始终将谓词与条件锁一起使用。谓词是确定线程继续运行是否安全的更具体的方法。该条件只是让线程处于休眠状态，直到信号线程可以设置谓词为止。</p>
+<p>下面几节将向你展示如何在代码中使用条件。</p>
+<h3 id="使用-NSCondition-类"><a href="#使用-NSCondition-类" class="headerlink" title="使用 NSCondition 类"></a>使用 NSCondition 类</h3><p><code>NSCondition</code> 类提供与 POSIX 条件相同的语义，但将所需的锁和条件数据结构封装在一个对象中。结果是一个对象，你可以像锁定互斥对象一样锁定它，然后像等待条件一样等待它。</p>
+<p>Listing 4-3 显示了一个代码片段，演示了等待 NSCondition 对象的事件序列。cocoaCondition 变量包含一个 NSCondition 对象，而 timeToDoWork 变量是一个整数，在发出条件信号之前从另一个线程开始递增</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[cocoaCondition lock];</span><br><span class="line"><span class="keyword">while</span> (timeToDoWork &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">    [cocoaCondition wait];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">timeToDoWork--;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Do real work here.</span></span><br><span class="line"></span><br><span class="line">[cocoaCondition unlock];</span><br></pre></td></tr></table></figure>
+
+<p>下面的代码显式用来给 Cocoa condition 发送信号很递增 predicate 变量的代码。你总是应该在 condition 发送信号之前给它加锁。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[cocoaCondition lock];</span><br><span class="line">timeToDoWork++;</span><br><span class="line">[cocoaCondition signal];</span><br><span class="line">[cocoaCondition unlock];</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-POSIX-条件"><a href="#使用-POSIX-条件" class="headerlink" title="使用 POSIX 条件"></a>使用 POSIX 条件</h3><p>POSIX 线程条件锁需要同时使用条件数据结构和互斥锁。虽然这两个锁结构是分开的，但是互斥锁在运行时与条件结构紧密地联系在一起。等待信号的线程应该总是同时使用相同的互斥锁和条件结构。更改该配置可能会导致错误。</p>
+<p>Listing 4-5 显示了条件和谓词的初始化和用法。初始化条件和互斥锁之后，等待和线程使用 ready_to_go 变量作为谓词进入 while 循环。只有在设置了谓词并随后发出条件信号时，等待线程才会醒来并开始工作。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">pthread_mutex_t mutex;</span><br><span class="line">pthread_cond_t condition;</span><br><span class="line">Boolean     ready_to_go = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> MyCondInitFunction() &#123;</span><br><span class="line">    pthread_mutex_init(&amp;mutex);</span><br><span class="line">    pthread_cond_init(&amp;condition, <span class="literal">NULL</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> MyWaitOnConditionFunction() &#123;</span><br><span class="line">    <span class="comment">// Lock the mutex.</span></span><br><span class="line">    pthread_mutex_lock(&amp;mutex);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// If the predicate is already set, then the while loop is bypassed;</span></span><br><span class="line">    <span class="comment">// otherwise, the thread sleeps until the predicate is set.</span></span><br><span class="line">    <span class="keyword">while</span>(ready_to_go == <span class="literal">false</span>) &#123;</span><br><span class="line">        pthread_cond_wait(&amp;condition, &amp;mutex);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Do work. (The mutex should stay locked.)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Reset the predicate and release the mutex.</span></span><br><span class="line">    ready_to_go = <span class="literal">false</span>;</span><br><span class="line">    pthread_mutex_unlock(&amp;mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>信令线程负责设置谓词和将信号发送到条件锁。Listing 4-6 显示了实现此行为的代码。在本例中，条件在互斥对象内部发出信号，以防止在等待条件的线程之间发生竞争条件。</p>
+<p>Listing 4-6 Signaling a condition lock</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> SignalThreadUsingCondition() &#123;</span><br><span class="line">    <span class="comment">// At this point, there should be work for the other thread to do.</span></span><br><span class="line">    pthread_mutex_lock(&amp;mutex);</span><br><span class="line">    ready_to_go = <span class="literal">true</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// Signal the other thread to begin work.</span></span><br><span class="line">    pthread_cond_signal(&amp;condition);</span><br><span class="line">    </span><br><span class="line">    pthread_mutex_unlock(&amp;mutex);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>: 上面的代码是一个简化的示例，目的是展示 POSIX 线程条件函数的基本用法。你自己的代码应该检查这些函数返回的错误代码，并适当地处理它们。</p>
+</blockquote>
+<hr>
+<h1 id="线程安全的概括"><a href="#线程安全的概括" class="headerlink" title="线程安全的概括"></a>线程安全的概括</h1><p>这个附录描述 iOS 和 OS X 中一些关键框架的高级别线程安全。这个附录中的内容将来会改变。</p>
+<h2 id="Cocoa"><a href="#Cocoa" class="headerlink" title="Cocoa"></a>Cocoa</h2><p>使用多线程 Cocoa 的指南包括：</p>
+<ul>
+<li>不可变对象通常是线程安全的。一旦创建了这些对象，就可以安全地将这些对象传递给线程或从线程传递给线程。另一方面，</li>
+<li>可变对象通常不是线程安全的。要在线程化应该程序中使用可变对象，应用必须适当地同步。更多信息，参见 《Mutable Versus Immutable》。</li>
+<li>许多被认为「线程不安全」的对象只有在多线程中使用才不安全。这些对象中的许多对象可以从任何线程中使用，只要每次只有一个线程。特定限制于应用程序主线程的对象都这样调用。</li>
+<li>应用的主线程负责处理事件。尽管如果事件路径中设计其他线程，ApplicationKit 将继续工作，但是操作可能会发生顺序错误。</li>
+<li>如果你想使用一个线程来绘制视图，所有绘图代码都在 NSView 中的 lockFocusIfCanDraw 和 unlockFocus 方法之间实现。</li>
+<li>要将 POSIX 线程与 Cocoa 一起使用，必须首先将 Cocoa 置于多线程模式。有关更多信息，参见 《Using POSIX Threads in a Cocoa Application》。</li>
+</ul>
+<h3 id="Foundation-框架线程安全"><a href="#Foundation-框架线程安全" class="headerlink" title="Foundation 框架线程安全"></a>Foundation 框架线程安全</h3><p>有一种误解认为 Foundation 框架是线程安全的，而应用程序工具包框架则不是。不幸的是，这是一个粗略的概括，而且有些误导。每个框架都有线程安全的区域和非线程安全的区域。下面几节描述 Foundation 框架的一般线程安全性。</p>
+<h4 id="线程安全的类和函数"><a href="#线程安全的类和函数" class="headerlink" title="线程安全的类和函数"></a>线程安全的类和函数</h4><p>以下类和函数通常被认为是线程安全的。你可以从多个线程使用相同的示例，而无需先获取锁。</p>
+<ul>
+<li><p>NSArray</p>
+</li>
+<li><p>NSAssertionHandler</p>
+</li>
+<li><p>NSAttributedString</p>
+</li>
+<li><p>NSBundle</p>
+</li>
+<li><p>NSCalendar</p>
+</li>
+<li><p>NSCalendarDate</p>
+</li>
+<li><p>NSCharacterSet</p>
+</li>
+<li><p>NSConditionLock</p>
+</li>
+<li><p>NSConnection</p>
+</li>
+<li><p>NSData</p>
+</li>
+<li><p>NSDate</p>
+</li>
+<li><p>NSDateFormatter</p>
+</li>
+<li><p>NSDecimal functions</p>
+</li>
+<li><p>NSDecimalNumber</p>
+</li>
+<li><p>NSDecimalNumberHandler</p>
+</li>
+<li><p>NSDeserializer</p>
+</li>
+<li><p>NSDictionary</p>
+</li>
+<li><p>NSDistantObject</p>
+</li>
+<li><p>NSDistributedLock</p>
+</li>
+<li><p>NSDistributedNotificationCenter</p>
+</li>
+<li><p>NSException</p>
+</li>
+<li><p>NSFileManager</p>
+</li>
+<li><p>NSFormatter</p>
+</li>
+<li><p>NSHost</p>
+</li>
+<li><p>NSJSONSerialization</p>
+</li>
+<li><p>NSLock</p>
+</li>
+<li><p>NSLog/NSLogv</p>
+</li>
+<li><p>NSMethodSignature</p>
+</li>
+<li><p>NSNotification</p>
+</li>
+<li><p>NSNotificationCenter</p>
+</li>
+<li><p>NSNumber</p>
+</li>
+<li><p>NSNumberFormatter</p>
+</li>
+<li><p>NSObject</p>
+</li>
+<li><p>NSOrderedSet</p>
+</li>
+<li><p>NSPortCoder</p>
+</li>
+<li><p>NSPortMessage</p>
+</li>
+<li><p>NSPortNameServer</p>
+</li>
+<li><p>NSProgress</p>
+</li>
+<li><p>NSProtocolChecker</p>
+</li>
+<li><p>NSProxy</p>
+</li>
+<li><p>NSRecursiveLock</p>
+</li>
+<li><p>NSSet</p>
+</li>
+<li><p>NSString</p>
+</li>
+<li><p>NSThread</p>
+</li>
+<li><p>NSTimer</p>
+</li>
+<li><p>NSTimeZone</p>
+</li>
+<li><p>NSUserDefaults</p>
+</li>
+<li><p>NSValue</p>
+</li>
+<li><p>NSXMLParser</p>
+</li>
+<li><p>Object allocation and retain count functions</p>
+</li>
+<li><p>Zone and memory functions</p>
+<h4 id="线程不安全的类"><a href="#线程不安全的类" class="headerlink" title="线程不安全的类"></a>线程不安全的类</h4><p>一下类和函数不是线程安全的。在大多数情况下，只要每次在一个线程中使用这些类，就可以在任何线程中使用它们。查看类文档了解更多细节</p>
+</li>
+<li><p>NSArchiver </p>
+</li>
+<li><p>NSAutoreleasePool </p>
+</li>
+<li><p>NSBundle </p>
+</li>
+<li><p>NSCalendar</p>
+</li>
+<li><p>NSCoder </p>
+</li>
+<li><p>NSCountedSet </p>
+</li>
+<li><p>NSDateFormatter </p>
+</li>
+<li><p>NSEnumerator </p>
+</li>
+<li><p>NSFileHandle </p>
+</li>
+<li><p>NSFormatter </p>
+</li>
+<li><p>NSHashTable functions </p>
+</li>
+<li><p>NSInvocation</p>
+</li>
+<li><p>NSJavaSetup functions</p>
+</li>
+<li><p>NSMapTable functions </p>
+</li>
+<li><p>NSMutableArray </p>
+</li>
+<li><p>NSMutableAttributedString </p>
+</li>
+<li><p>NSMutableCharacterSet </p>
+</li>
+<li><p>NSMutableData </p>
+</li>
+<li><p>NSMutableDictionary </p>
+</li>
+<li><p>NSMutableSet </p>
+</li>
+<li><p>NSMutableString </p>
+</li>
+<li><p>NSNotificationQueue </p>
+</li>
+<li><p>NSNumberFormatter</p>
+</li>
+<li><p>NSPipe</p>
+</li>
+<li><p>NSPort</p>
+</li>
+<li><p>NSProcessInfo</p>
+</li>
+<li><p>NSRunLoop</p>
+</li>
+<li><p>NSScanner</p>
+</li>
+<li><p>NSSerializer</p>
+</li>
+<li><p>NSTask</p>
+</li>
+<li><p>NSUnarchiver</p>
+</li>
+<li><p>NSUndoManager</p>
+</li>
+<li><p>User name and home directory functions</p>
+</li>
+</ul>
+<p>注意，虽然 <code>NSArchiver</code>、<code>NSCoder</code>、<code>NSEnumerator</code> 对象本身是线程安全的，但在这里列出它们是因为使用它们更改它们包装的数据对象是不安全的。例如，在归档的情况下，更改正在归档的对象图是不安全的。对于枚举器，任何线程更改枚举集合都是不安全的。</p>
+<h4 id="主线程独享类"><a href="#主线程独享类" class="headerlink" title="主线程独享类"></a>主线程独享类</h4><p>下面的类只能在应用的主线程上使用</p>
+<ul>
+<li>NSAppleScript</li>
+</ul>
+<h4 id="可变和不可变"><a href="#可变和不可变" class="headerlink" title="可变和不可变"></a>可变和不可变</h4><p>不可变对象通常是线程安全的；一旦创建了这些对象，就可以安全地将这些对象传递给线程或从线程传递给线程。当然，在使用不可变对象时，仍然需要记住正确地使用引用计数。如果不适当地释放没有保留的对象，可能会在稍后发生异常。</p>
+<p>可变对象通常不是线程安全的。要在线程化应用中使用可变对象，应用必须使用锁同步对它们的访问。（有关更多信息，参见 <a target="_blank" rel="noopener" href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/ThreadSafety/ThreadSafety.html#//apple_ref/doc/uid/10000057i-CH8-SW2">《Atomic Operations》</a>）。通常，当涉及到突变时，集合类（例如 NSMutableArray、NSMutableDictionary）不是线程安全的。也就是说，如果一个或多个线程正在更改一个数组，可能会出现问题。必须锁定读和写发生的位置，以确保线程安全。</p>
+<p>即使一个方法声称返回一个不可变对象，也不应该简单地假设返回的对象是不可变的。根据方法实现的不同，返回的对象可能是可变的或不可变的。例如，返回类型为 NSString 的方法可能由于其实现而实际返回 NSMutableString。如果你想确保你拥有的对象是不可变的，你应该创建一个不可变的副本</p>
+<h4 id="可重入性"><a href="#可重入性" class="headerlink" title="可重入性"></a>可重入性</h4><p>只有当操作「调用」同一对象或不同对象中的其他操作时，才有可能实现重入。保留和释放对象就是这样一个有时被忽略的「调用」。</p>
+<p>下表列出了 Foundation 框架中显式可重入的部分。所有其他类可能是可重入的，也可能不是，也可能在将来被重入。从来没有对可重入性进行过完整的分析，这个列表可能不是详尽的。</p>
+<ul>
+<li>Distributed Objects</li>
+<li>NSConditionLock</li>
+<li>NSDistributedLock</li>
+<li>NSLock</li>
+<li>NSLog/NSLogv</li>
+<li>NSNotificationCenter</li>
+<li>NSRecursiveLock</li>
+<li>NSRunLoop</li>
+<li>NSUserDefaults</li>
+</ul>
+<h4 id="类的初始化"><a href="#类的初始化" class="headerlink" title="类的初始化"></a>类的初始化</h4><p>Objective-C 运行时系统在类接收任何其他消息之前向各个类对象发送初始化消息。这使类有机会在使用之前设置其运行时的环境。在多线程应用中，运行时保证只有一个线程执行 initialize 方法 —— 恰好向类发送第一个消息的线程。如果第二个线程试图在第一个线程仍然位于 initialize 方法中时向类发送消息，那么第二个线程将阻塞，直到 initialize 方法执行完毕。同时，第一个线程可以继续调用该类上的其他方法。初始化方法不应依赖于该类的第二个线程调用方法；如果是这样，两个线程就会陷入死锁。</p>
+<p>由于 OS X 10.1.x 及更早的一个 bug，一个线程可以在另一个线程完成执行该类的 initialize 方法之前向该类发送消息。然后线程可以访问未完全初始化的值，这可能会导致应用崩溃。如果遇到这个问题，你需要引入锁来防止在初始化之前访问这些值，或者在成为多线程之前强制类初始化本身。</p>
+<h4 id="自动释放池"><a href="#自动释放池" class="headerlink" title="自动释放池"></a>自动释放池</h4><p>每个线程维护自己的 NSAutoreleasePool 对象堆栈。Cocoa 希望在当前线程的堆栈上始终有一个可用的自动释放池。如果池不可用，则不会释放对象，并且会泄露内存。NSAutoreleasePool 对象根据 ApplicationKit 在应用的主线程中自动创建和销毁，但是辅助线程（以及仅用于 Foundation 的应用）必须在使用 Cocoa 之前创建他们自己的对象。如果线程的生命周期很长，并且可能生成许多自动释放对象，那么应该定期销毁并创建自动释放池（就像 ApplicationKit 在主线程所做的那样）；否则，自动释放的对象会累积，内存占用会增加。如果分离的线程不使用 Cocoa，则不需要创建自动释放池。</p>
+<h4 id="Run-Loops-2"><a href="#Run-Loops-2" class="headerlink" title="Run Loops"></a>Run Loops</h4><p>每个线程有且仅有一个 RunLoop。但是每个 RunLoop 进而每个线程都有自己的一组输入模式，这些模式决定 RunLoop 侦听哪些输入源。在一个 RunLoop 中定义的输入模式不会影响在另一个 RunLoop 中定义的输入模式，即使它们可能具有相同的名称。</p>
+<p>如果你的应用基于 ApplicationKit，那么主线程的 RunLoop 将自动运行，但是辅助线程（以及仅用于 Foundation 的应用）必须自己运行 RunLoop。如果分离的线程没有进入 RunLoop，那么一旦分离的方法执行完毕，线程就会退出。</p>
+<p>尽管有一些外部表现，NSRunLoop 类并不是线程安全的。你应该仅从拥有该类的线程调用该类的实际方法。</p>
+<h3 id="CoreData-框架"><a href="#CoreData-框架" class="headerlink" title="CoreData 框架"></a>CoreData 框架</h3><p>CoreData 框架通常支持线程，不过也有一些使用上的注意事项。有关这些警告的信息，参阅 《Concurrency with Core Data》 和 《Core Data Programming Guide》。</p>
+<h2 id="Core-Foundation"><a href="#Core-Foundation" class="headerlink" title="Core Foundation"></a>Core Foundation</h2><p>CoreFoundation 具有足够的线程安全性，如果你小心编程，就不会遇到与竞争线程相关的任何问题。在常见的情况下，例如查询、保留、释放和传递不可变的对象时，它是线程安全的。甚至可能从多个线程查询的中信共享对象也是可靠的线程安全的。</p>
+<p>与 Cocoa 一样，CoreFoundation 在对象或其内容发生突变时也不是线程安全的。例如，修改可变数据或可变数组对象并不像你期望的那样是线程安全的，但是修改不可变数组中的对象也不是线程安全的。其中一个原因是性能，这在这些情况下非常关键。此外，在这个级别通常不可能实现绝对线程安全。例如，你不能排除由于保留从集合中获得的对象而导致的不确定行为。在调用保留包含的对象之前，可以释放集合本身。</p>
+<p>在需要从多个线程访问 CoreFoundation 对象并对其进行修改的情况下，你的代码应该使用访问点上的锁来防止并发访问。例如，枚举 CoreFoundation 数组对象的代码应该在枚举块周围使用适当的锁定调用，以防止其他人更改数组。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/05/22/ios-Setting/" rel="prev" title="iOS_Setting">
+      <i class="fa fa-chevron-left"></i> iOS_Setting
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/03/26/Concurrency-Programming-Guide/" rel="next" title="Concurrency Programming Guide 翻译">
+      Concurrency Programming Guide 翻译 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%BC%96%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">关于多线程编程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">什么是线程？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%9C%AF%E8%AF%AD"><span class="nav-number">1.3.</span> <span class="nav-text">线程的术语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%9B%BF%E4%BB%A3%E5%93%81"><span class="nav-number">1.4.</span> <span class="nav-text">线程的替代品</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%94%AF%E6%8C%81"><span class="nav-number">1.5.</span> <span class="nav-text">线程支持</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Threading-Packages"><span class="nav-number">1.5.1.</span> <span class="nav-text">Threading Packages</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Loops"><span class="nav-number">1.5.2.</span> <span class="nav-text">Run Loops</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E5%B7%A5%E5%85%B7"><span class="nav-number">1.5.3.</span> <span class="nav-text">同步工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E8%AE%AF"><span class="nav-number">1.5.4.</span> <span class="nav-text">线程间通讯</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Design-Tips"><span class="nav-number">1.6.</span> <span class="nav-text">Design Tips</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E6%98%BE%E5%BC%8F%E7%9A%84%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.6.1.</span> <span class="nav-text">避免显式的创建线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E6%8C%81%E4%BD%A0%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%90%88%E7%90%86%E7%9A%84%E5%BF%99"><span class="nav-number">1.6.2.</span> <span class="nav-text">保持你的线程合理的忙</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%81%BF%E5%85%8D%E5%85%B1%E4%BA%AB%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.6.3.</span> <span class="nav-text">避免共享数据结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E4%B8%8E%E7%94%A8%E6%88%B7%E7%95%8C%E9%9D%A2"><span class="nav-number">1.6.4.</span> <span class="nav-text">线程与用户界面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%86%E8%A7%A3%E7%BA%BF%E7%A8%8B%E5%9C%A8%E9%80%80%E5%87%BA%E6%97%B6%E7%9A%84%E8%A1%A8%E7%8E%B0"><span class="nav-number">1.6.5.</span> <span class="nav-text">了解线程在退出时的表现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E5%BC%82%E5%B8%B8"><span class="nav-number">1.6.6.</span> <span class="nav-text">处理异常</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B2%E5%87%80%E7%9A%84%E7%BB%88%E6%AD%A2%E4%BD%A0%E7%9A%84%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.6.7.</span> <span class="nav-text">干净的终止你的线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Libraries-%E4%B8%AD%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="nav-number">1.6.8.</span> <span class="nav-text">Libraries 中的线程安全</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%AE%A1%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">线程管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%B6%88%E8%80%97"><span class="nav-number">2.1.</span> <span class="nav-text">线程消耗</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.2.</span> <span class="nav-text">创建线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSThread"><span class="nav-number">2.2.1.</span> <span class="nav-text">使用 NSThread</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-POSIX-%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.2.2.</span> <span class="nav-text">使用 POSIX 线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSObject-%E6%9D%A5%E7%94%9F%E6%88%90%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.2.3.</span> <span class="nav-text">使用 NSObject 来生成线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8-Cocoa-%E5%BA%94%E7%94%A8%E4%B8%AD%E4%BD%BF%E7%94%A8-POSIX-%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.2.4.</span> <span class="nav-text">在 Cocoa 应用中使用 POSIX 线程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%9D%E6%8A%A4-Cocoa-%E6%A1%86%E6%9E%B6"><span class="nav-number">2.2.4.1.</span> <span class="nav-text">保护 Cocoa 框架</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%B7%E5%90%88%E4%BD%BF%E7%94%A8-POSIX-%E5%92%8C-Cocoa-%E9%94%81"><span class="nav-number">2.2.4.2.</span> <span class="nav-text">混合使用 POSIX 和 Cocoa 锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%B1%9E%E6%80%A7"><span class="nav-number">2.3.</span> <span class="nav-text">配置线程的属性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%A0%88%E5%A4%A7%E5%B0%8F"><span class="nav-number">2.3.1.</span> <span class="nav-text">配置线程的栈大小</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%9C%AC%E5%9C%B0%E5%AD%98%E5%82%A8"><span class="nav-number">2.3.2.</span> <span class="nav-text">配置线程本地存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%86%E7%A6%BB%E7%8A%B6%E6%80%81"><span class="nav-number">2.3.3.</span> <span class="nav-text">设置线程的分离状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BC%98%E5%85%88%E7%BA%A7"><span class="nav-number">2.3.4.</span> <span class="nav-text">设置线程的优先级</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%85%A5%E5%8F%A3%E5%87%BD%E6%95%B0"><span class="nav-number">2.4.</span> <span class="nav-text">编写线程的入口函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E4%B8%80%E4%B8%AA%E8%87%AA%E5%8A%A8%E9%87%8A%E6%94%BE%E6%B1%A0"><span class="nav-number">2.4.1.</span> <span class="nav-text">创建一个自动释放池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.4.2.</span> <span class="nav-text">设置异常处理程序</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-RunLoop"><span class="nav-number">2.4.3.</span> <span class="nav-text">设置 RunLoop</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B"><span class="nav-number">2.5.</span> <span class="nav-text">终止线程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Run-Loops-1"><span class="nav-number">3.</span> <span class="nav-text">Run Loops</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Run-Loops-%E7%9A%84%E5%89%96%E6%9E%90"><span class="nav-number">3.1.</span> <span class="nav-text">Run Loops 的剖析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Loop-%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.1.1.</span> <span class="nav-text">Run Loop 模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.1.2.</span> <span class="nav-text">输入源</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E-Port-%E7%9A%84-Sources"><span class="nav-number">3.1.2.1.</span> <span class="nav-text">基于 Port 的 Sources</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-Input-Sources"><span class="nav-number">3.1.2.2.</span> <span class="nav-text">自定义 Input Sources</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Cocoa-%E6%89%A7%E8%A1%8C%E9%80%89%E6%8B%A9%E5%99%A8%E6%BA%90"><span class="nav-number">3.1.2.3.</span> <span class="nav-text">Cocoa 执行选择器源</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Timer-Sources"><span class="nav-number">3.1.3.</span> <span class="nav-text">Timer Sources</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Loop-%E8%A7%82%E5%AF%9F%E8%80%85"><span class="nav-number">3.1.4.</span> <span class="nav-text">Run Loop 观察者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Loop-%E4%BA%8B%E4%BB%B6%E7%9A%84%E9%A1%BA%E5%BA%8F"><span class="nav-number">3.1.5.</span> <span class="nav-text">Run Loop 事件的顺序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%95%E6%97%B6%E4%BD%BF%E7%94%A8-RunLoop"><span class="nav-number">3.2.</span> <span class="nav-text">何时使用 RunLoop</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-Run-Loop-%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.3.</span> <span class="nav-text">使用 Run Loop 对象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E4%B8%80%E4%B8%AA-Run-Loop-%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.3.1.</span> <span class="nav-text">获取一个 Run Loop 对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Run-Loop"><span class="nav-number">3.3.2.</span> <span class="nav-text">配置 Run Loop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8-Run-Loop"><span class="nav-number">3.3.3.</span> <span class="nav-text">启动 Run Loop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%80%E5%87%BA-Run-Loop"><span class="nav-number">3.3.4.</span> <span class="nav-text">退出 Run Loop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%92%8C-Run-Loop-%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.3.5.</span> <span class="nav-text">线程安全和 Run Loop 对象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Run-Loop-Sources"><span class="nav-number">3.4.</span> <span class="nav-text">配置 Run Loop Sources</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E8%87%AA%E5%AE%9A%E4%B9%89%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.4.1.</span> <span class="nav-text">定义自定义输入源</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.4.1.1.</span> <span class="nav-text">定义输入源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8-RunLoop-%E4%B8%AD%E5%AE%89%E8%A3%85%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.4.1.2.</span> <span class="nav-text">在 RunLoop 中安装输入源</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%8F%E8%B0%83%E8%BE%93%E5%85%A5%E6%BA%90%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">3.4.1.3.</span> <span class="nav-text">协调输入源客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%91%E8%BE%93%E5%85%A5%E6%BA%90%E5%8F%91%E9%80%81%E4%BF%A1%E5%8F%B7"><span class="nav-number">3.4.1.4.</span> <span class="nav-text">向输入源发送信号</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Timer-Sources"><span class="nav-number">3.4.2.</span> <span class="nav-text">配置 Timer Sources</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%9F%BA%E4%BA%8E%E7%AB%AF%E5%8F%A3%E7%9A%84%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.4.3.</span> <span class="nav-text">配置基于端口的输入源</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-NSMachPort-%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.4.3.1.</span> <span class="nav-text">配置 NSMachPort 对象</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E4%B8%BB%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BB%A3%E7%A0%81"><span class="nav-number">3.4.3.1.1.</span> <span class="nav-text">实现主线程的代码</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E9%9D%9E%E4%B8%BB%E7%BA%BF%E7%A8%8B%E4%BB%A3%E7%A0%81"><span class="nav-number">3.4.3.1.2.</span> <span class="nav-text">实现非主线程代码</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-NSMessagePort-%E5%AF%B9%E8%B1%A1"><span class="nav-number">3.4.3.2.</span> <span class="nav-text">配置 NSMessagePort 对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8-CoreFoundation-%E4%B8%AD%E9%85%8D%E7%BD%AE%E5%9F%BA%E4%BA%8E%E7%AB%AF%E5%8F%A3%E7%9A%84%E8%BE%93%E5%85%A5%E6%BA%90"><span class="nav-number">3.4.3.3.</span> <span class="nav-text">在 CoreFoundation 中配置基于端口的输入源</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5"><span class="nav-number">4.</span> <span class="nav-text">同步</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E5%B7%A5%E5%85%B7-1"><span class="nav-number">4.1.</span> <span class="nav-text">同步工具</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C"><span class="nav-number">4.1.1.</span> <span class="nav-text">原子操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%E5%92%8C-Volatile-%E5%8F%98%E9%87%8F"><span class="nav-number">4.1.2.</span> <span class="nav-text">内存屏障和 Volatile 变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">4.1.3.</span> <span class="nav-text">锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6"><span class="nav-number">4.1.4.</span> <span class="nav-text">条件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E9%80%89%E6%8B%A9%E5%99%A8%E4%BE%8B%E7%A8%8B"><span class="nav-number">4.1.5.</span> <span class="nav-text">执行选择器例程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E6%B6%88%E8%80%97%E5%92%8C%E6%80%A7%E8%83%BD"><span class="nav-number">4.2.</span> <span class="nav-text">同步消耗和性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%92%8C%E4%BF%A1%E5%8F%B7"><span class="nav-number">4.3.</span> <span class="nav-text">线程安全和信号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E8%AE%BE%E8%AE%A1%E7%9A%84%E6%8A%80%E5%B7%A7"><span class="nav-number">4.4.</span> <span class="nav-text">线程安全设计的技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8C%E5%85%A8%E9%81%BF%E5%85%8D%E5%90%8C%E6%AD%A5"><span class="nav-number">4.4.1.</span> <span class="nav-text">完全避免同步</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%86%E8%A7%A3%E5%90%8C%E6%AD%A5%E7%9A%84%E9%99%90%E5%88%B6"><span class="nav-number">4.4.2.</span> <span class="nav-text">了解同步的限制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BB%A3%E7%A0%81%E6%AD%A3%E7%A1%AE%E6%80%A7%E7%9A%84%E5%A8%81%E8%83%81"><span class="nav-number">4.4.3.</span> <span class="nav-text">注意代码正确性的威胁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E6%AD%BB%E9%94%81%E5%92%8C%E6%B4%BB%E9%94%81"><span class="nav-number">4.4.4.</span> <span class="nav-text">注意死锁和活锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A3%E7%A1%AE%E4%BD%BF%E7%94%A8-Volatile-%E5%8F%98%E9%87%8F"><span class="nav-number">4.4.5.</span> <span class="nav-text">正确使用 Volatile 变量</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C"><span class="nav-number">4.5.</span> <span class="nav-text">使用原子操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E9%94%81"><span class="nav-number">4.6.</span> <span class="nav-text">使用锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-POSIX-%E4%BA%92%E6%96%A5%E9%94%81"><span class="nav-number">4.6.1.</span> <span class="nav-text">使用 POSIX 互斥锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSLock-%E7%B1%BB"><span class="nav-number">4.6.2.</span> <span class="nav-text">使用 NSLock 类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-synchronized-%E6%8C%87%E4%BB%A4"><span class="nav-number">4.6.3.</span> <span class="nav-text">使用 @synchronized 指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%85%B6%E4%BB%96-Cocoa-%E9%94%81"><span class="nav-number">4.6.4.</span> <span class="nav-text">使用其他 Cocoa 锁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSRecursiveLock-%E5%AF%B9%E8%B1%A1"><span class="nav-number">4.6.4.1.</span> <span class="nav-text">使用 NSRecursiveLock 对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSConditionLock-%E5%AF%B9%E8%B1%A1"><span class="nav-number">4.6.4.2.</span> <span class="nav-text">使用 NSConditionLock 对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#NSDistributedLock"><span class="nav-number">4.6.4.3.</span> <span class="nav-text">NSDistributedLock</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%9D%A1%E4%BB%B6"><span class="nav-number">4.7.</span> <span class="nav-text">使用条件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-NSCondition-%E7%B1%BB"><span class="nav-number">4.7.1.</span> <span class="nav-text">使用 NSCondition 类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-POSIX-%E6%9D%A1%E4%BB%B6"><span class="nav-number">4.7.2.</span> <span class="nav-text">使用 POSIX 条件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E6%A6%82%E6%8B%AC"><span class="nav-number">5.</span> <span class="nav-text">线程安全的概括</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Cocoa"><span class="nav-number">5.1.</span> <span class="nav-text">Cocoa</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Foundation-%E6%A1%86%E6%9E%B6%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8"><span class="nav-number">5.1.1.</span> <span class="nav-text">Foundation 框架线程安全</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E7%B1%BB%E5%92%8C%E5%87%BD%E6%95%B0"><span class="nav-number">5.1.1.1.</span> <span class="nav-text">线程安全的类和函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E4%B8%8D%E5%AE%89%E5%85%A8%E7%9A%84%E7%B1%BB"><span class="nav-number">5.1.1.2.</span> <span class="nav-text">线程不安全的类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E7%BA%BF%E7%A8%8B%E7%8B%AC%E4%BA%AB%E7%B1%BB"><span class="nav-number">5.1.1.3.</span> <span class="nav-text">主线程独享类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E5%8F%98%E5%92%8C%E4%B8%8D%E5%8F%AF%E5%8F%98"><span class="nav-number">5.1.1.4.</span> <span class="nav-text">可变和不可变</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E9%87%8D%E5%85%A5%E6%80%A7"><span class="nav-number">5.1.1.5.</span> <span class="nav-text">可重入性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">5.1.1.6.</span> <span class="nav-text">类的初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%8A%A8%E9%87%8A%E6%94%BE%E6%B1%A0"><span class="nav-number">5.1.1.7.</span> <span class="nav-text">自动释放池</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Run-Loops-2"><span class="nav-number">5.1.1.8.</span> <span class="nav-text">Run Loops</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CoreData-%E6%A1%86%E6%9E%B6"><span class="nav-number">5.1.2.</span> <span class="nav-text">CoreData 框架</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Core-Foundation"><span class="nav-number">5.2.</span> <span class="nav-text">Core Foundation</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">lhs728</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">16</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/lhs7248" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;lhs7248" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:lhs7248@126.com" title="E-Mail → mailto:lhs7248@126.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">lhs728</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="Symbols count total">207k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="Reading time total">3:09</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
